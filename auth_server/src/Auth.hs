@@ -61,7 +61,7 @@ serveToken (Auth a b ) = do
     authenticated <- liftIO $ authenticate a b
     if authenticated then
       liftIO genToken
-      else throwError err403 { errBody = "Authentication Failure"}
+      else throwError err403 {errBody = "Authentication Failure"}
 
 aApi :: Proxy AuthAPI
 aApi = Proxy
