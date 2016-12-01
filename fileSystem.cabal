@@ -22,12 +22,15 @@ library
                      , servant
                      , text
                      , wai
+                     , datetime
                      , warp
                      , either
                      , pwstore-fast
                      , mysql
                      , mysql-simple
                      , text
+                     , uuid
+                     , memory
                      , cgi
                      , bytestring >= 0.10
   default-language:    Haskell2010

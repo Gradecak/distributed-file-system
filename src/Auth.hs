@@ -19,6 +19,9 @@ import           Network.CGI                        (liftIO)
 import           Network.Wai
 import           Servant
 import           System.Environment                 (getEnv)
+import Data.UUID.V4 (nextRandom)
+import Data.UUID (toString)
+import           Data.DateTime
 
 data User = User { name :: String, hash :: String } deriving (Show)
 
@@ -32,15 +35,22 @@ data AuthReq = Auth { username :: String
                     , password :: String
                     } deriving (Eq, Show, Generic, FromJSON)
 
-data Token = Token { token :: String
-                   , dirIp :: String
-                   } deriving (Eq, Show, Generic, ToJSON)
+data Token = Token { token  :: String
+                   , expiry :: DateTime
+                   , dirIp  :: String
+                   } deriving (Show, Eq, Ord, Generic, FromJSON, ToJSON)
 
 -- auth server enpoints
 type AuthAPI = "auth" :> ReqBody '[JSON] AuthReq :> Post '[JSON] Token
 
-genToken :: Token
-genToken = Token "poo" "poo"
+genToken :: IO Token
+genToken = do
+    t <- nextRandom
+    e <- expiryDate
+    return $ Token (toString t) e "192.168.0.1"
+
+expiryDate :: IO DateTime
+expiryDate = fmap (addMinutes' 30) getCurrentTime
 
 server :: Server AuthAPI
 server = serveToken
@@ -50,14 +60,14 @@ serveToken :: AuthReq -> Handler Token
 serveToken (Auth a b ) = do
     authenticated <- liftIO $ authenticate a b
     if authenticated then
-      return genToken
+      liftIO genToken
       else throwError err403 { errBody = "Authentication Failure"}
 
-aApi :: Proxy AuthAPI           --
-aApi = Proxy                    --
-                                --
-app1 :: Application             --
-app1 = serve aApi server        --
+aApi :: Proxy AuthAPI
+aApi = Proxy
+
+app1 :: Application
+app1 = serve aApi server
 
 databaseInf :: IO ConnectInfo
 databaseInf = do
