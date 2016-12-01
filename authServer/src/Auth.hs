@@ -9,6 +9,9 @@ module Auth where
 import           Crypto.PasswordStore
 import           Data.Aeson
 import qualified Data.ByteString.Char8              as BS (ByteString, pack)
+import           Data.DateTime
+import           Data.UUID                          (toString)
+import           Data.UUID.V4                       (nextRandom)
 import           Database.MySQL.Simple
 import qualified Database.MySQL.Simple.QueryParams  as QP
 import           Database.MySQL.Simple.QueryResults
@@ -19,9 +22,6 @@ import           Network.CGI                        (liftIO)
 import           Network.Wai
 import           Servant
 import           System.Environment                 (getEnv)
-import Data.UUID.V4 (nextRandom)
-import Data.UUID (toString)
-import           Data.DateTime
 
 data User = User { name :: String, hash :: String } deriving (Show)
 
