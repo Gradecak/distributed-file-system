@@ -9,9 +9,6 @@ module Auth where
 import           Crypto.PasswordStore
 import           Data.Aeson
 import qualified Data.ByteString.Char8              as BS (ByteString, pack)
-import           Data.DateTime
-import           Data.UUID                          (toString)
-import           Data.UUID.V4                       (nextRandom)
 import           Database.MySQL.Simple
 import qualified Database.MySQL.Simple.QueryParams  as QP
 import           Database.MySQL.Simple.QueryResults
@@ -22,6 +19,8 @@ import           Network.CGI                        (liftIO)
 import           Network.Wai
 import           Servant
 import           System.Environment                 (getEnv)
+import           Token                              (Token)
+import           Token.Generate                     (genToken)
 
 data User = User { name :: String, hash :: String } deriving (Show)
 
@@ -35,22 +34,8 @@ data AuthReq = Auth { username :: String
                     , password :: String
                     } deriving (Eq, Show, Generic, FromJSON)
 
-data Token = Token { token  :: String
-                   , expiry :: DateTime
-                   , dirIp  :: String
-                   } deriving (Show, Eq, Ord, Generic, FromJSON, ToJSON)
-
 -- auth server enpoints
 type AuthAPI = "auth" :> ReqBody '[JSON] AuthReq :> Post '[JSON] Token
-
-genToken :: IO Token
-genToken = do
-    t <- nextRandom
-    e <- expiryDate
-    return $ Token (toString t) e "192.168.0.1"
-
-expiryDate :: IO DateTime
-expiryDate = fmap (addMinutes' 30) getCurrentTime
 
 server :: Server AuthAPI
 server = serveToken
