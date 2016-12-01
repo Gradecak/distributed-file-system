@@ -37,7 +37,7 @@ resolver: lts-7.11
 # will not be run. This is useful for tweaking upstream packages.
 packages:
 - '.'
-- /Users/maki/Documents/Haskell/fileSystem/Token/
+- '/Users/maki/Documents/Haskell/fileSystem/Token/'
 
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
@@ -68,3 +68,6 @@ extra-package-dbs: []
 #
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor
+# docker:
+#   enable: true
+#   run-args: ["--net=bridge", "--link=auth-db:mysql","--publish=8080:8080"]
