@@ -1,8 +1,8 @@
-name:                authServer
+name:                Auth
 version:             0.1.0.0
 synopsis:            Initial project template from stack
 description:         Please see README.md
-homepage:            https://github.com/githubuser/authServer#readme
+homepage:            https://github.com/githubuser/Auth#readme
 license:             BSD3
 license-file:        LICENSE
 author:              Author name here
@@ -15,26 +15,22 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
+                     , src/Auth
   exposed-modules:     Auth
+                     , Auth.Service
+                     , Auth.API
+                     , Auth.Session
   build-depends:       base >= 4.7 && < 5
                      , aeson
                      , servant-server
                      , servant
-                     , text
-                     , wai
-                     , datetime
-                     , warp
-                     , either
                      , pwstore-fast
-                     , mysql
-                     , mysql-simple
-                     , text
-                     , uuid
-                     , memory
+                     , warp
+                     , wai >= 3.2
                      , Token
                      , cgi
-                     , bytestring >= 0.10
                      , hedis
+                     , bytestring >= 0.10
   default-language:    Haskell2010
 
 executable authServer-exe
@@ -42,19 +38,9 @@ executable authServer-exe
   main-is:             Main.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
-                     , authServer
-                     , warp
-  default-language:    Haskell2010
-
-test-suite authServer-test
-  type:                exitcode-stdio-1.0
-  hs-source-dirs:      test
-  main-is:             Spec.hs
-  build-depends:       base
-                     , authServer
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+                     , Auth
   default-language:    Haskell2010
 
 source-repository head
   type:     git
-  location: https://github.com/githubuser/authServer
+  location: https://github.com/githubuser/Auth
