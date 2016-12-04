@@ -15,7 +15,7 @@
 # resolver:
 #  name: custom-snapshot
 #  location: "./custom-snapshot.yaml"
-resolver: lts-7.11
+resolver: lts-7.12
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -38,12 +38,9 @@ resolver: lts-7.11
 packages:
 - '.'
 - '/Users/maki/Documents/Haskell/fileSystem/Token/'
-
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
-extra-deps: [ mysql-simple-0.4.0.0
-            , mysql-0.1.4
-            , datetime-0.3.1]
+extra-deps: [datetime-0.3.1]
 
 # Override default flag values for local packages and extra-deps
 flags: {}
@@ -68,6 +65,3 @@ extra-package-dbs: []
 #
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor
-# docker:
-#   enable: true
-#   run-args: ["--net=bridge", "--link=auth-db:mysql","--publish=8080:8080"]
