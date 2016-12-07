@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 module Token.Store (insert, lookup, lookupB) where
+=======
+module Token.Store (insert, Token.Store.lookup, Token.Store.lookupB) where
+>>>>>>> 80e33a929568fa03d7a3234566d250c34aef513a
 
 import Token
 import Prelude hiding (lookup)

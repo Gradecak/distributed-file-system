@@ -3,7 +3,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators     #-}
 
+<<<<<<< HEAD
 module Auth.Service (runAuthService) where
+=======
+module Auth.Service where
+>>>>>>> 80e33a929568fa03d7a3234566d250c34aef513a
 
 import Auth.API
 import Auth
