@@ -32,15 +32,24 @@ server =  addAuthorized
 -- server instance using the Reader monad (transformed from Handler monad)
 readerServerT :: ServerT DirAPI (Reader FileServers)
 readerServerT =  addAuthorized1
-                 :<|> fileOp Dir.listDirectory
-                 :<|> openF
+                 :<|> fileOp1 Dir.listDirectory
+                 :<|> openF1
 
--- handler for adding authorize tokens to local redis instance
+{-- handler for adding authorize tokens to local redis instance ------------------------------}
 -- (using Reader monad)
 addAuthorized1 :: Token -> Reader FileServers NoContent
 addAuthorized1 t = liftIO (connect defaultConnectInfo) >>= Tok.insert t >> return NoContent
 
--- handler for adding authorize otkens to local redis instance
+fileOp1 :: (a -> IO b) -> () -> Maybe a -> Reader FileServers b
+fileOp1 op _ (Just x) = liftIO $ op x
+fileOp1 _  _  Nothing = lift $ throwError err400 { errBody="Missing File Path"}
+
+openF1 :: () -> FileRequest -> Reader FileServers (Maybe FileHandle)
+openF1 _ _ = return Nothing
+---------------------------------------------------------------------------------------------
+
+
+{-- handler for adding authorize otkens to local redis instance ------------------------------}
 -- (using Handler monad)
 addAuthorized :: Token -> Handler NoContent
 addAuthorized t = liftIO (connect defaultConnectInfo) >>= _addAuthorized t
@@ -48,6 +57,7 @@ addAuthorized t = liftIO (connect defaultConnectInfo) >>= _addAuthorized t
 -- placeholder for handling open file requests
 openF :: () -> FileRequest -> Handler(Maybe FileHandle)
 openF _ _ = return Nothing
+--------------------------------------------------------------------------------------------
 
 -- functions for transfomring Handler to Reader monad--------------------
 type FileServers = [String]
