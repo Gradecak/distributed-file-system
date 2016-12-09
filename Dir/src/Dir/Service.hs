@@ -38,7 +38,10 @@ readerServerT =  addAuthorized1
 {-- handler for adding authorize tokens to local redis instance ------------------------------}
 -- (using Reader monad)
 addAuthorized1 :: Token -> Reader FileServers NoContent
-addAuthorized1 t = liftIO (connect defaultConnectInfo) >>= Tok.insert t >> return NoContent
+addAuthorized1 t = do
+    c <-liftIO (connect defaultConnectInfo)
+    liftIO $ Tok.insert t c
+    return NoContent
 
 fileOp1 :: (a -> IO b) -> () -> Maybe a -> Reader FileServers b
 fileOp1 op _ (Just x) = liftIO $ op x
