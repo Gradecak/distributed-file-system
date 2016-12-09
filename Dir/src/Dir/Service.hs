@@ -30,14 +30,14 @@ server =  addAuthorized
      :<|> openF
 
 -- server instance using the Reader monad (transformed from Handler monad)
-readerServerT :: ServerT DirAPI (Reader [String])
+readerServerT :: ServerT DirAPI (Reader FileServers)
 readerServerT =  addAuthorized1
                  :<|> fileOp Dir.listDirectory
                  :<|> openF
 
 -- handler for adding authorize tokens to local redis instance
 -- (using Reader monad)
-addAuthorized1 :: Token -> Reader [String] NoContent
+addAuthorized1 :: Token -> Reader FileServers NoContent
 addAuthorized1 t = liftIO (connect defaultConnectInfo) >>= Tok.insert t >> return NoContent
 
 -- handler for adding authorize otkens to local redis instance
@@ -50,10 +50,12 @@ openF :: () -> FileRequest -> Handler(Maybe FileHandle)
 openF _ _ = return Nothing
 
 -- functions for transfomring Handler to Reader monad--------------------
-readerToHandler :: Reader [String] :~> Handler               --
+type FileServers = [String]
+
+readerToHandler :: Reader FileServers :~> Handler               --
 readerToHandler = Nat readerToHandler'                       --
                                                              --
-readerToHandler' :: forall a. Reader [String] a -> Handler a --
+readerToHandler' :: forall a. Reader FileServers a -> Handler a --
 readerToHandler' r = return (runReader r [])                 --
 
 readerServer :: Server DirAPI                                --
