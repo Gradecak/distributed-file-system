@@ -3,25 +3,23 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators     #-}
 
-<<<<<<< HEAD
 module Auth.Service (runAuthService) where
-=======
-module Auth.Service where
->>>>>>> 80e33a929568fa03d7a3234566d250c34aef513a
 
 import Auth.API
 import Auth
 import Token
+import Servant.Client
 import Token.Generate
 import Servant
 import Network.CGI (liftIO)
 import Network.Wai.Handler.Warp
+import Network.Socket (SockAddr)
 
-serveToken :: Auth -> Handler (Token,String)
-serveToken (Auth a b ) = do
+serveToken :: SockAddr -> Auth -> Handler (Token,String)
+serveToken ip (Auth a b ) = do
     authenticated <- liftIO $ authenticate a b
     if authenticated then do
-      t <-liftIO $ genToken "src"
+      t <-liftIO $ genToken (show ip)
       return (t, "12312")
       else throwError err403 {errBody = "Authentication Failure"}
 

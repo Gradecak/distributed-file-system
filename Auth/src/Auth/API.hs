@@ -7,4 +7,4 @@ import Auth
 import Servant.API
 import Token
 
-type AuthAPI = "auth" :> ReqBody '[JSON] Auth :> Post '[JSON] (Token, String)
+type AuthAPI = "auth" :> RemoteHost :> ReqBody '[JSON] Auth :> Post '[JSON] (Token, String)

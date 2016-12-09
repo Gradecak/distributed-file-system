@@ -23,7 +23,9 @@ library
   build-depends:       base >= 4.7 && < 5
                      , aeson
                      , servant-server
+                     , servant-client
                      , servant
+                     , network >= 2.6
                      , pwstore-fast
                      , warp
                      , wai >= 3.2

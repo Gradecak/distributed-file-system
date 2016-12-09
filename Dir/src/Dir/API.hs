@@ -11,7 +11,7 @@ import Servant
 import Token
 
 type DirAPI = AuthAPI
-         :<|> "list" :> AuthProtect "cookie-auth" :> QueryParam "path" FilePath :> Get '[JSON] [FilePath]
-         :<|> "get"  :> AuthProtect "cookie-auth" :> QueryParam "path" FilePath :> Get '[JSON] File
+         :<|> "ls" :> AuthProtect "cookie-auth" :> QueryParam "path" FilePath :> Get '[JSON] [FilePath]
+         :<|> "open"  :> AuthProtect "cookie-auth" :> ReqBody '[JSON] FileRequest :> Post '[JSON] (Maybe FileHandle)
 --         :<|> "open" :> AuthProtect "cookie-auth" :> QueryParam "path" FilePath :> Get '[JSON] File
---         :<|> "close":> AuthProtect "cookie-auth" :> QueryParam "path" FilePath :> Get '[JSON] NoContent
+--         :<|> "close":> AuthProtect "cookie-auth" :> ReqBody '[JSON] FileHandle :> Post '[JSON] NoContent

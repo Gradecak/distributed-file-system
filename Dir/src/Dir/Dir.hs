@@ -4,28 +4,52 @@
 {-# LANGUAGE TypeFamilies      #-}
 {-# LANGUAGE TypeOperators     #-}
 
-module Dir (File(..), getF, toFile) where
+module Dir (FileHandle(..), FileRequest(..), FileMode(..),  getF, toFile, openFNew) where
 
+import           Control.Monad              (mzero)
 import           Data.Aeson
 import           GHC.Generics
-import qualified System.IO as IO
-import qualified System.IO.Strict as S.IO
+import           System.Directory           as Dir
+import qualified System.IO                  as IO
+import qualified System.IO.Strict           as S.IO
 
-data File = File  { path     :: FilePath
-                  , serverIp :: String
-                  } deriving (Show, Read, Generic, FromJSON, ToJSON)
+data FileHandle = FileHandle  { path     :: FilePath
+                              , serverIp :: String
+                              } deriving (Show, Read, Generic, FromJSON, ToJSON)
+
+-- type of access required to a file
+data FileMode = Read | Write | ReadWrite
+    deriving (Show)
+
+-- request type for accing a file
+data FileRequest = Request FilePath FileMode
+    deriving (Show)
+
+instance FromJSON FileRequest where
+    parseJSON (Object v) = mode <$>
+                           v .: "path" <*>
+                           v .: "mode"
+    parseJSON _          = mzero
+
+mode :: String -> String -> FileRequest
+mode path m = Request path $ case m of
+                                "Write"     -> Write
+                                "Read"      -> Read
+                                "ReadWrite" -> ReadWrite
 
 -- write a file location to a file in our 'shadow' filesystem
-toFile :: File -> IO ()
-toFile f@(File p ip) = appendFile p $ show f
+toFile :: FileHandle -> IO ()
+toFile f@(FileHandle p ip) = appendFile p $ show f
 
 -- returns location of a remote file from our 'shadow' filesystem
 -- and moves file just served to end of queue for round robin load balancing
-getF :: FilePath -> IO File
+getF :: FilePath -> IO FileHandle
 getF path = do
     f <- S.IO.readFile path
-    let (x:xs) = read f :: [File]
+    let (x:xs) = read f :: [FileHandle]
     writeFile path $ show (xs ++ [x])
     return x
 
---openF :: FilePath -> [String] -> File
+-- open a new file in our 'shadow' fileSystem for writing
+openFNew :: FilePath -> [FileHandle] -> IO FileHandle
+openFNew path (f:fs) = writeFile path (show $ fs++[f]) >> return f
