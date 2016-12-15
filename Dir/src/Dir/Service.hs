@@ -1,92 +1,82 @@
-{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE DataKinds         #-}
 {-# LANGUAGE DeriveAnyClass    #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes        #-}
 {-# LANGUAGE TypeFamilies      #-}
 {-# LANGUAGE TypeOperators     #-}
 
 module Dir.Service where
 
 import           Auth.Session
-import           Control.Applicative              ((<$>))
+import qualified Control.Concurrent.STM           as Stm
+import qualified Control.Concurrent.STM.TVar      as TVar
+import           Control.Monad.Reader
+import qualified Control.Monad.Trans              as Trans (lift)
+import           Control.Monad.Trans.Except
 import           Database.Redis
 import           Dir
 import           Dir.API
-import           Network.CGI                      (liftIO)
 import           Network.Wai
 import           Network.Wai.Handler.Warp
 import           Servant
 import           Servant.Server.Experimental.Auth
 import qualified System.Directory                 as Dir
 import           Token
-import qualified Token.Store as Tok
-import Control.Monad.Reader
-import qualified Control.Monad.Trans as Trans (lift)
+import qualified Token.Store                      as Tok
+import qualified Network.Socket as Net
 
--- server instance using the servant Handler monad
-server :: Server DirAPI
-server =  addAuthorized
-     :<|> fileOp Dir.listDirectory
-     :<|> openF
 
--- server instance using the Reader monad (transformed from Handler monad)
-readerServerT :: ServerT DirAPI (Reader FileServers)
-readerServerT =  addAuthorized1
-                 :<|> fileOp1 Dir.listDirectory
-                 :<|> openF1
+{-----------------Transforming Handler monad to a Directory monad ----------------}
+type FileServers = TVar.TVar [String]
 
-{-- handler for adding authorize tokens to local redis instance ------------------------------}
--- (using Reader monad)
-addAuthorized1 :: Token -> Reader FileServers NoContent
-addAuthorized1 t = do
+type DirM = ReaderT FileServers (ExceptT ServantErr IO)
+
+readerToHandler :: FileServers -> DirM  :~> Handler
+readerToHandler fs = Nat $ readerToHandler' fs
+
+readerToHandler' :: FileServers -> forall a. DirM a -> Handler a
+readerToHandler' fs r = runReaderT r fs
+
+readerServer :: FileServers -> Server DirAPI
+readerServer fs = enter (readerToHandler fs) readerServerT
+{----------------------------------------------------------------------------------}
+
+{------------------- Server instance using custom monad ---------------------------}
+readerServerT :: ServerT DirAPI DirM
+readerServerT =  addAuthorized
+            :<|> fileOp Dir.listDirectory
+            :<|> openF
+            :<|> registerFileServer
+{----------------------------------------------------------------------------------}
+
+registerFileServer :: Net.SockAddr -> DirM ()
+registerFileServer ip = do
+    servers <- ask
+    liftIO $ Stm.atomically $ TVar.modifyTVar' servers (show ip :)
+    return ()
+
+{---------------------- Handlers for the Directory Server endpoints  --------------}
+addAuthorized :: Token -> DirM NoContent
+addAuthorized t = do
     c <-liftIO (connect defaultConnectInfo)
     liftIO $ Tok.insert t c
     return NoContent
 
-fileOp1 :: (a -> IO b) -> () -> Maybe a -> Reader FileServers b
-fileOp1 op _ (Just x) = liftIO $ op x
-fileOp1 _  _  Nothing = lift $ throwError err400 { errBody="Missing File Path"}
+fileOp :: (a -> IO b) -> () -> Maybe a -> DirM b
+fileOp op _ (Just x) = liftIO $ op x
+fileOp _  _  Nothing = lift $ throwError err400 { errBody="Missing File Path"}
 
-openF1 :: () -> FileRequest -> Reader FileServers (Maybe FileHandle)
-openF1 _ _ = return Nothing
+openF :: () -> FileRequest -> DirM (Maybe FileHandle)
+openF _ _ = return Nothing
 ---------------------------------------------------------------------------------------------
 
-
-{-- handler for adding authorize otkens to local redis instance ------------------------------}
--- (using Handler monad)
-addAuthorized :: Token -> Handler NoContent
-addAuthorized t = liftIO (connect defaultConnectInfo) >>= _addAuthorized t
-
--- placeholder for handling open file requests
-openF :: () -> FileRequest -> Handler(Maybe FileHandle)
-openF _ _ = return Nothing
---------------------------------------------------------------------------------------------
-
--- functions for transfomring Handler to Reader monad--------------------
-type FileServers = [String]
-
-readerToHandler :: Reader FileServers :~> Handler               --
-readerToHandler = Nat readerToHandler'                       --
-                                                             --
-readerToHandler' :: forall a. Reader FileServers a -> Handler a --
-readerToHandler' r = return (runReader r [])                 --
-
-readerServer :: Server DirAPI                                --
-readerServer = enter readerToHandler readerServerT           --
--------------------------------------------------------------------------
-
-
--- HOF for preforming file system operations and
--- lifting result into the Handler monad
-fileOp :: (a -> IO b) -> () -> Maybe a -> Handler b
-fileOp op _ (Just x) = liftIO $ op x
-fileOp _  _  Nothing = throwError err400 { errBody="Missing File Path"}
-
 startApp :: IO ()
-startApp = run 8080 app
+startApp = do
+    x <- TVar.newTVarIO []
+    run 8080 $ app x
 
-app :: Application
-app = serveWithContext api genAuthServerContext readerServer  --server
+app :: FileServers -> Application
+app fs = serveWithContext api genAuthServerContext (readerServer fs) --server
 
 api :: Proxy DirAPI
 api = Proxy
