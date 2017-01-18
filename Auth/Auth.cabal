@@ -19,18 +19,23 @@ library
   exposed-modules:     Auth
                      , Auth.Service
                      , Auth.API
-                     , Auth.Session
+                     , Auth.Client
   build-depends:       base >= 4.7 && < 5
                      , aeson
-                     , servant-server
-                     , servant-client
-                     , servant
+                     , servant-server >= 0.9.1.1
+                     , servant-client >=  0.9.1.1
+                     , servant >= 0.9.1.1
+                     , Servant
+                     , stm
                      , network >= 2.6
                      , pwstore-fast
                      , warp
+                     , mtl >= 2.2
                      , wai >= 3.2
                      , Token
+                     , Dir
                      , cgi
+                     , http-client >= 0.4
                      , hedis
                      , bytestring >= 0.10
   default-language:    Haskell2010

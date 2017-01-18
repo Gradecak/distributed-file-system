@@ -6,13 +6,11 @@
 module Dir.API where
 
 import Dir
-import Auth.Session (AuthAPI)
+import Session (AuthAPI)
 import Servant.API
 import Token
 
 type DirAPI = AuthAPI
          :<|> "ls"       :> AuthProtect "cookie-auth" :> QueryParam "path" FilePath :> Get '[JSON] [FilePath]
          :<|> "open"     :> AuthProtect "cookie-auth" :> ReqBody '[JSON] FileRequest :> Post '[JSON] (Maybe FileHandle)
-         :<|> "register" :> RemoteHost                :> Post '[] ()
---         :<|> "open" :> AuthProtect "cookie-auth" :> QueryParam "path" FilePath :> Get '[JSON] File
---         :<|> "close":> AuthProtect "cookie-auth" :> ReqBody '[JSON] FileHandle :> Post '[JSON] NoContent
+         :<|> "register" :> RemoteHost                :> Post '[JSON] ()

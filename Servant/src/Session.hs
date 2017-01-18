@@ -3,7 +3,7 @@
 {-# LANGUAGE TypeFamilies      #-}
 {-# LANGUAGE TypeOperators     #-}
 
-module Auth.Session (genAuthServerContext, authHandler, authenticate, _addAuthorized, AuthAPI) where
+module Session (genAuthServerContext, authHandler, authenticate, AuthAPI) where
 
 import           Control.Monad                    (unless)
 import qualified Data.ByteString.Char8            as BS
@@ -19,23 +19,19 @@ type instance AuthServerData (AuthProtect "cookie-auth") = ()
 
 type AuthAPI =  "authorize" :> ReqBody '[JSON] Token :> Post '[JSON] NoContent
 
-genAuthServerContext :: Context (AuthHandler Request () ': '[])
-genAuthServerContext = authHandler :. EmptyContext
+genAuthServerContext :: Connection -> Context (AuthHandler Request () ': '[])
+genAuthServerContext con = authHandler con :. EmptyContext
 
 -- servant handler for Generalized authentication
-authHandler :: AuthHandler Request ()
-authHandler = mkAuthHandler handler
-  where handler req = case lookup "auth-cookie" (requestHeaders req) of
+authHandler :: Connection -> AuthHandler Request ()
+authHandler c = mkAuthHandler $ handler c
+  where handler con req = case lookup "auth-cookie" (requestHeaders req) of
           Nothing -> throwError (err401 { errBody = "Missing auth header" })
-          Just authCookieKey -> authenticate authCookieKey
+          Just authCookieKey -> authenticate con authCookieKey
 
 -- lookup a token in the Redis store, if exists token is valid
-authenticate :: BS.ByteString -> Handler()
-authenticate s = do
-     c <- liftIO $ connect defaultConnectInfo
+authenticate :: Connection -> BS.ByteString -> Handler()
+authenticate c s = do
+     -- c <- liftIO $ connect defaultConnectInfo
      x <- liftIO (T.lookupB s c)
      unless x $ throwError (err401 {errBody = "Invalid Auth Cookie"})
-
--- a generic function for adding tokens to the redis token store
-_addAuthorized :: Token -> Connection -> Handler NoContent
-_addAuthorized t c = liftIO $ T.insert t c >> return NoContent

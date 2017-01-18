@@ -1,0 +1,5 @@
+* Tasks
+** TODO
+   [2017-01-17 Tue]
+   [[file:~/Documents/Haskell/fileSystem/Dir/src/Dir/Dir.hs::openFNew%20path%20(f:fs)%20=%20writeFile%20path%20(show%20$%20fs++%5Bf%5D)%20>>%20return%20f]]
+   Implement opening of new files on the filesystem

@@ -25,12 +25,14 @@ data FileMode = Read | Write | ReadWrite
 data FileRequest = Request FilePath FileMode
     deriving (Show)
 
+-- making JSON instance for our FileRequest ADT ---
 instance FromJSON FileRequest where
     parseJSON (Object v) = mode <$>
                            v .: "path" <*>
                            v .: "mode"
     parseJSON _          = mzero
 
+-- helper function for our JSON instance
 mode :: String -> String -> FileRequest
 mode path m = Request path $ case m of
                                 "Write"     -> Write

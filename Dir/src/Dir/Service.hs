@@ -7,76 +7,73 @@
 
 module Dir.Service where
 
-import           Auth.Session
-import qualified Control.Concurrent.STM           as Stm
-import qualified Control.Concurrent.STM.TVar      as TVar
+import qualified Control.Concurrent.STM      as Stm
+import qualified Control.Concurrent.STM.TVar as TVar
+import           Control.Monad.Except
 import           Control.Monad.Reader
-import qualified Control.Monad.Trans              as Trans (lift)
-import           Control.Monad.Trans.Except
 import           Database.Redis
 import           Dir
 import           Dir.API
-import           Network.Wai
+import qualified Network.Socket              as Net
+--import           Network.Wai
 import           Network.Wai.Handler.Warp
 import           Servant
-import           Servant.Server.Experimental.Auth
-import qualified System.Directory                 as Dir
+--import           Servant.Server.Experimental.Auth
+import           FSHandler  -- where our transformed handler monad lives
+import           Session
+import qualified System.Directory            as Dir
 import           Token
-import qualified Token.Store                      as Tok
-import qualified Network.Socket as Net
+import qualified Token.Store                 as Tok
 
 
-{-----------------Transforming Handler monad to a Directory monad ----------------}
-type FileServers = TVar.TVar [String]
+type FileServers = TVar.TVar [String] -- a handy alias
 
-type DirM = ReaderT FileServers (ExceptT ServantErr IO)
+-- the data that all of our handlers will have access to
+data HandlerData = Info { fileServers :: FileServers
+                        , redisConn   :: Connection }
 
-readerToHandler :: FileServers -> DirM  :~> Handler
-readerToHandler fs = Nat $ readerToHandler' fs
+-- alias for the Monad our Handlers will run in
+type DirM = FSHandler HandlerData
 
-readerToHandler' :: FileServers -> forall a. DirM a -> Handler a
-readerToHandler' fs r = runReaderT r fs
-
-readerServer :: FileServers -> Server DirAPI
-readerServer fs = enter (readerToHandler fs) readerServerT
-{----------------------------------------------------------------------------------}
-
-{------------------- Server instance using custom monad ---------------------------}
+--Transformed Server instance. Using our transfomed handler monad
 readerServerT :: ServerT DirAPI DirM
 readerServerT =  addAuthorized
-            :<|> fileOp Dir.listDirectory
+            :<|> fileSystemOp Dir.listDirectory
             :<|> openF
             :<|> registerFileServer
-{----------------------------------------------------------------------------------}
 
-registerFileServer :: Net.SockAddr -> DirM ()
-registerFileServer ip = do
-    servers <- ask
-    liftIO $ Stm.atomically $ TVar.modifyTVar' servers (show ip :)
-    return ()
-
-{---------------------- Handlers for the Directory Server endpoints  --------------}
+{-------------------Handlers for the Severer endpoints ----------------------------}
 addAuthorized :: Token -> DirM NoContent
 addAuthorized t = do
-    c <-liftIO (connect defaultConnectInfo)
+    Info{redisConn=c} <-ask
     liftIO $ Tok.insert t c
     return NoContent
 
-fileOp :: (a -> IO b) -> () -> Maybe a -> DirM b
-fileOp op _ (Just x) = liftIO $ op x
-fileOp _  _  Nothing = lift $ throwError err400 { errBody="Missing File Path"}
+-- perform an action on the host filesystem
+fileSystemOp :: (a -> IO b) -> () -> Maybe a -> DirM b
+fileSystemOp op _ (Just x) = liftIO $ op x
+fileSystemOp _  _  Nothing = lift $ throwError err400 { errBody="Missing File Path"}
 
 openF :: () -> FileRequest -> DirM (Maybe FileHandle)
-openF _ _ = return Nothing
----------------------------------------------------------------------------------------------
+openF _ (Request path mode) = return Nothing
 
+registerFileServer :: Net.SockAddr -> DirM ()
+registerFileServer ip = do
+    Info{fileServers=servers} <- ask
+    void $ liftIO $ Stm.atomically $ TVar.modifyTVar' servers (show ip :)
+
+-- Servant stuff
 startApp :: IO ()
 startApp = do
-    x <- TVar.newTVarIO []
-    run 8080 $ app x
+    x    <- TVar.newTVarIO []
+    conn <- connect defaultConnectInfo
+    run 8080 $ app (Info {fileServers = x, redisConn = conn})
 
-app :: FileServers -> Application
-app fs = serveWithContext api genAuthServerContext (readerServer fs) --server
+app :: HandlerData -> Application
+app inf = serveWithContext api (genAuthServerContext $ redisConn inf) (readerServer inf)
+
+readerServer :: HandlerData -> Server DirAPI
+readerServer inf = enter (readerToHandler inf) readerServerT
 
 api :: Proxy DirAPI
 api = Proxy

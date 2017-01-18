@@ -1,0 +1,8 @@
+* Tasks
+** TODO Secure 'register directory server' and 'register auth server' endpoints
+   [2017-01-18 Wed]
+   [[file:~/Documents/Haskell/fileSystem/Auth/src/Auth/API.hs:::<|>%20"dir"%20:>%20RemoteHost%20:>%20Post%20'%5BJSON%5D%20()]]
+   find a way to stop unauthorised services from registering themselves with the system.
+** TODO resend token in case of failure (check results for errors)
+   [2017-01-18 Wed]
+   [[file:~/Documents/Haskell/fileSystem/Auth/src/Auth/Client.hs::mapM_%20(runClientM%20(queries%20t)%20.%20(ClientEnv%20manager))%20destinations]]

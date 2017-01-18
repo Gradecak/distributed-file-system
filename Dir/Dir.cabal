@@ -20,8 +20,9 @@ library
                      , Dir.API
                      , Dir.Service
   build-depends:       base >= 4.7 && < 5
-                     , servant
-                     , servant-server >= 0.8
+                     , servant >= 0.9.1.1
+                     , servant-server >= 0.9.1.1
+                     , Servant
                      , bytestring
                      , aeson >= 0.11
                      , stm
@@ -32,7 +33,6 @@ library
                      , unordered-containers
                      , text
                      , strict
-                     , Auth
                      , hedis
                      , directory >= 1.2
                      , wai >= 3.2
