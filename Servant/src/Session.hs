@@ -6,9 +6,9 @@
 module Session (genAuthServerContext, authHandler, authenticate, AuthAPI) where
 
 import           Control.Monad                    (unless)
+import           Control.Monad.IO.Class           (liftIO)
 import qualified Data.ByteString.Char8            as BS
 import           Database.Redis
-import           Network.CGI                      (liftIO)
 import           Network.Wai
 import           Servant
 import           Servant.Server.Experimental.Auth
@@ -32,6 +32,5 @@ authHandler c = mkAuthHandler $ handler c
 -- lookup a token in the Redis store, if exists token is valid
 authenticate :: Connection -> BS.ByteString -> Handler()
 authenticate c s = do
-     -- c <- liftIO $ connect defaultConnectInfo
-     x <- liftIO (T.lookupB s c)
-     unless x $ throwError (err401 {errBody = "Invalid Auth Cookie"})
+    x <- liftIO (T.lookupB s c)
+    unless x $ throwError (err401 {errBody = "Invalid Auth Cookie"})

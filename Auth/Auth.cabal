@@ -27,6 +27,7 @@ library
                      , servant >= 0.9.1.1
                      , Servant
                      , stm
+                     , split
                      , network >= 2.6
                      , pwstore-fast
                      , warp

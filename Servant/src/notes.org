@@ -1,0 +1,5 @@
+* Tasks
+** TODO beef up token checking
+   [2017-01-19 Thu]
+   [[file:~/Documents/Haskell/fileSystem/Servant/src/Session.hs::authHandler%20::%20Connection%20->%20AuthHandler%20Request%20()]]
+   make token checking compare the source IP of the request against the valid source IP

@@ -16,13 +16,14 @@ import           Control.Monad.Reader
 import           Crypto.PasswordStore
 import qualified Data.ByteString.Char8       as BS
 import qualified Database.Redis              as DB
+import           FSHandler
 import           Network.Socket              (SockAddr)
 import           Network.Wai.Handler.Warp
-import FSHandler
 import           Servant
 import           Servant.Client
 import           Token
 import           Token.Generate
+import Data.List.Split (splitOn)
 
 
 data ServiceInfo = Info { fileServers :: TVar.TVar [(String,Int)] -- list of file servers registered
@@ -45,7 +46,7 @@ registerService :: (ServiceInfo -> TVar.TVar [(String,Int)]) -> SockAddr -> Mayb
 registerService _ _ Nothing = throwError err417{errBody = "Missing Service Port"}
 registerService f ip (Just port) = do
     info <- ask
-    liftIO $ Stm.atomically $ TVar.modifyTVar' (f info)  ((show ip, port) :)
+    liftIO $ Stm.atomically $ TVar.modifyTVar' (f info)  ((head $ splitOn ":" $ show ip, port) :)
 
 -- authenticate a user with the system, generate a token and
 -- notify all registered services of the new valid token

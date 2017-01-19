@@ -4,6 +4,7 @@ import Token
 import Prelude hiding (lookup)
 import Database.Redis
 import Control.Monad (void)
+import Control.Monad.IO.Class (liftIO)
 import qualified Data.ByteString.Char8 as BS (ByteString, pack)
 
 
@@ -24,6 +25,7 @@ lookup t conn =  runRedis conn $ do
 lookupB :: BS.ByteString -> Connection -> IO Bool
 lookupB t conn = runRedis conn $ do
     x <- get t
+    liftIO $ print x
     return $ case x of
       Right (Just _) -> True
       _              -> False
