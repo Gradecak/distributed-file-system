@@ -8,37 +8,47 @@ module Auth.Service (runAuthService) where
 
 import           Auth
 import           Auth.API
-import           Auth.Client                 (disseminateToken)
+import           Auth.Client                 (disseminateToken, notifyNewFS)
 import qualified Control.Concurrent.STM      as Stm
 import qualified Control.Concurrent.STM.TVar as TVar
 import           Control.Monad.Except
 import           Control.Monad.Reader
 import           Crypto.PasswordStore
 import qualified Data.ByteString.Char8       as BS
+import           Data.List.Split             (splitOn)
 import qualified Database.Redis              as DB
 import           FSHandler
 import           Network.Socket              (SockAddr)
 import           Network.Wai.Handler.Warp
 import           Servant
 import           Servant.Client
-import           Token
+import           Token                       (Token)
 import           Token.Generate
-import Data.List.Split (splitOn)
-
 
 data ServiceInfo = Info { fileServers :: TVar.TVar [(String,Int)] -- list of file servers registered
                         , dirServers  :: TVar.TVar [(String,Int)]
                         , redisCon    :: DB.Connection
                         }
 
---type AuthM = ReaderT ServiceInfo (ExceptT ServantErr IO)
+-- essentially an alias for type AuthM = ReaderT ServiceInfo (ExceptT ServantErr IO)
 type AuthM = FSHandler ServiceInfo
-
 
 server :: ServerT AuthAPI AuthM
 server = serveToken
          :<|> registerService dirServers
-         :<|> registerService fileServers
+         :<|> newFS
+
+-- add a new FileServer to the list of Servers and notify all other
+-- services in the system of the new service
+newFS :: SockAddr -> Maybe Int-> AuthM ()
+newFS ip Nothing = throwError err417{errBody = "Missing Service Port"}
+newFS ip p@(Just port) = do
+    Info{fileServers=f, dirServers=d} <- ask
+    liftIO $ do
+        fs <- TVar.readTVarIO f
+        ds <- TVar.readTVarIO d
+        notifyNewFS (head $ splitOn ":" $ show ip, port) (ds ++ fs)
+    registerService fileServers ip p
 
 -- add a service wishing to sign up to the system to the list
 -- of services that should be notified on new client
@@ -46,7 +56,8 @@ registerService :: (ServiceInfo -> TVar.TVar [(String,Int)]) -> SockAddr -> Mayb
 registerService _ _ Nothing = throwError err417{errBody = "Missing Service Port"}
 registerService f ip (Just port) = do
     info <- ask
-    liftIO $ Stm.atomically $ TVar.modifyTVar' (f info)  ((head $ splitOn ":" $ show ip, port) :)
+    liftIO $ Stm.atomically $ do
+        TVar.modifyTVar' (f info)  ((head $ splitOn ":" $ show ip, port) :)
 
 -- authenticate a user with the system, generate a token and
 -- notify all registered services of the new valid token
@@ -57,8 +68,8 @@ serveToken ip (Auth a b) = do
     if authenticated
       then liftIO $ do
         t  <- genToken (show ip)
-        ds <- Stm.atomically $ Stm.readTVar d
-        fs <- Stm.atomically $ Stm.readTVar f
+        ds <- TVar.readTVarIO d
+        fs <- TVar.readTVarIO f
         disseminateToken t (ds ++ fs) --notify all services of token
         return (t, ds)
       else throwError err403 {errBody = "Authentication Failure"}

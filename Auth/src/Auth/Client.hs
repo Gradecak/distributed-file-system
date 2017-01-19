@@ -1,33 +1,44 @@
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds     #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Auth.Client (disseminateToken) where
+module Auth.Client (disseminateToken, notifyNewFS) where
 
-import Dir.API
-import Token (Token)
-import Data.Aeson
-import Session
-import Data.Proxy
-import GHC.Generics
-import Network.HTTP.Client (newManager, defaultManagerSettings, Manager)
-import Servant.API
-import Servant.Client
+import           Data.Aeson
+import           Data.Proxy
+import           Dir.API
+import           GHC.Generics
+import           Network.HTTP.Client (Manager, defaultManagerSettings,
+                                      newManager)
+import           Servant.API
+import           Servant.Client
+import           Session
+import           Token               (Token)
 
-api :: Proxy AuthAPI
-api = Proxy
+tokenAPI :: Proxy AuthAPI
+tokenAPI = Proxy
 
-authorize = client api
+dirAPI :: Proxy DirAPI
+dirAPI = Proxy
 
-queries :: Token -> ClientM NoContent
-queries t = authorize t
+_ :<|> _ :<|> _ :<|> register = client dirAPI
+
+authorize = client tokenAPI
+
+query :: a -> (a -> ClientM b)-> ClientM b
+query a b = b a
+
+queryAPI :: [(String,Int)] -> (a -> ClientM b) -> a -> IO ()
+queryAPI endpts paramT param = do
+    manager <- newManager defaultManagerSettings
+    let destinations = genDestinations endpts manager
+    mapM_ (runClientM (query param paramT)) destinations
 
 disseminateToken :: Token -> [(String,Int)]-> IO ()
-disseminateToken t services = do
-    manager <- newManager defaultManagerSettings
-    let destinations = genDestinations services manager
-    x <- mapM (runClientM (queries t)) destinations
-    print x
+disseminateToken t services = queryAPI services authorize t
+
+notifyNewFS :: (String,Int) -> [(String,Int)] -> IO ()
+notifyNewFS newFS services = queryAPI services register newFS
 
 genDestinations :: [(String,Int)] -> Manager -> [ClientEnv]
 genDestinations x m = map (\(ip,port) -> ClientEnv m (BaseUrl Http ip port "")) x

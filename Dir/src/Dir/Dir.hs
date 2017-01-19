@@ -32,6 +32,11 @@ instance FromJSON FileRequest where
                            v .: "mode"
     parseJSON _          = mzero
 
+instance ToJSON FileRequest where
+    toJSON (Request (path) Read)      = object ["path" .= path, "mode" .= String "Read"]
+    toJSON (Request (path) Write)     = object ["path" .= path, "mode" .= String "Write"]
+    toJSON (Request (path) ReadWrite) = object ["path" .= path, "mode" .= String "ReadWrite"]
+
 -- helper function for our JSON instance
 mode :: String -> String -> FileRequest
 mode path m = Request path $ case m of

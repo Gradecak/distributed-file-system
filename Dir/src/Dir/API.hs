@@ -13,4 +13,4 @@ import Token
 type DirAPI = AuthAPI
          :<|> "ls"       :> AuthProtect "cookie-auth" :> QueryParam "path" FilePath :> Get '[JSON] [FilePath]
          :<|> "open"     :> AuthProtect "cookie-auth" :> ReqBody '[JSON] FileRequest :> Post '[JSON] (Maybe FileHandle)
-         :<|> "register" :> RemoteHost                :> Post '[JSON] ()
+         :<|> "register" :> ReqBody '[JSON] (String,Int) :> Post '[JSON] ()

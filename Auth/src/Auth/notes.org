@@ -6,3 +6,7 @@
 ** TODO resend token in case of failure (check results for errors)
    [2017-01-18 Wed]
    [[file:~/Documents/Haskell/fileSystem/Auth/src/Auth/Client.hs::mapM_%20(runClientM%20(queries%20t)%20.%20(ClientEnv%20manager))%20destinations]]
+** TODO make the config store 1 dir server entry
+   [2017-01-19 Thu]
+   [[file:~/Documents/Haskell/fileSystem/Auth/src/Auth/Service.hs::,%20dirServers%20::%20TVar.TVar%20%5B(String,Int)%5D]]
+   if architecture only supports 1 file system only need to store 1 directory server entry

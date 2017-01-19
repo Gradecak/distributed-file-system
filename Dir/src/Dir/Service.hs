@@ -14,7 +14,7 @@ import           Control.Monad.Reader
 import           Database.Redis
 import           Dir
 import           Dir.API
-import qualified Network.Socket              as Net
+import qualified Network.Socket              as Net (SockAddr)
 import           Network.Wai.Handler.Warp
 import           Servant
 import           FSHandler  -- where our transformed handler monad lives
@@ -23,7 +23,7 @@ import qualified System.Directory            as Dir
 import           Token
 import qualified Token.Store                 as Tok
 
-type FileServers = TVar.TVar [String] -- a handy alias
+type FileServers = TVar.TVar [(String,Int)] -- a handy alias
 
 -- the data that all of our handlers will have access to
 data HandlerData = Info { fileServers :: FileServers
@@ -55,12 +55,11 @@ fileSystemOp _  _  Nothing = lift $ throwError err400 { errBody="Missing File Pa
 openF :: () -> FileRequest -> DirM (Maybe FileHandle)
 openF _ (Request path mode) = return Nothing
 
-registerFileServer :: Net.SockAddr -> DirM ()
+registerFileServer :: (String, Int) -> DirM ()
 registerFileServer ip = do
     Info{fileServers=servers} <- ask
-    void $ liftIO $ Stm.atomically $ TVar.modifyTVar' servers (show ip :)
+    void $ liftIO $ Stm.atomically $ TVar.modifyTVar' servers (ip :)
 {----------------------------------------------------------------------------------}
-
 
 app :: HandlerData -> Application
 app inf = serveWithContext api (genAuthServerContext $ redisConn inf) (server inf)
