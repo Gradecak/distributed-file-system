@@ -3,13 +3,17 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators     #-}
 
-module FileSystem.API where
+module FileServer.API (FileAPI, fileAPI) where
 
-import Session
-import File
+import Utils.Session
+import Data.Proxy
+import Utils.Data.File
 import Servant.API
 
 -- | Endpoints for interacting with the fileserver
-type FileAPI = AuthAPI --endpoint to listen for new authorized clients
+type FileAPI = TokenEndPt --endpoint to listen for new authorized clients
   :<|> "get" :> AuthProtect "cookie-auth" :> ReqBody '[JSON] FilePath :> Post '[JSON] (Maybe File)
   :<|> "put" :> AuthProtect "cookie-auth" :> ReqBody '[JSON] File :> Post '[JSON] ()
+
+fileAPI :: Proxy FileAPI
+fileAPI = Proxy

@@ -6,19 +6,13 @@ module Auth.Client (disseminateToken, notifyNewFS) where
 
 import           Data.Aeson
 import           Data.Proxy
-import           Dir.API
+import           Directory.API
 import           Network.HTTP.Client (Manager, defaultManagerSettings,
                                       newManager)
 import           Servant.API
 import           Servant.Client
-import           Session
+import           Utils.Session
 import           Token               (Token)
-
-tokenAPI :: Proxy AuthAPI
-tokenAPI = Proxy
-
-dirAPI :: Proxy DirAPI
-dirAPI = Proxy
 
 _ :<|> _ :<|> _ :<|> register = client dirAPI
 
@@ -31,6 +25,7 @@ queryAPI :: [(String,Int)] -> (a -> ClientM b) -> a -> IO ()
 queryAPI endpts paramT param = do
     manager <- newManager defaultManagerSettings
     let destinations = genDestinations endpts manager
+
     mapM_ (runClientM (query param paramT)) destinations
 
 disseminateToken :: Token -> [(String,Int)]-> IO ()

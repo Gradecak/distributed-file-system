@@ -1,8 +1,8 @@
-name:                Servant
+name:                Utils
 version:             0.1.0.0
 synopsis:            Initial project template from stack
 description:         Please see README.md
-homepage:            https://github.com/githubuser/Servant#readme
+homepage:            https://github.com/githubuser/Utils#readme
 license:             BSD3
 license-file:        LICENSE
 author:              Author name here
@@ -15,9 +15,12 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Session
-                     , FSHandler
-                     , File
+                     , src/Utils/
+                     , src/Utils/Data
+  exposed-modules:     Utils.Session
+                     , Utils.FSHandler
+                     , Utils.Data.File
+                     , Utils.Data.Auth
   build-depends:       base >= 4.7 && < 5
                      , bytestring >= 0.10
                      , Token
@@ -38,4 +41,4 @@ library
 
 source-repository head
   type:     git
-  location: https://github.com/githubuser/Servant
+  location: https://github.com/githubuser/Utils

@@ -1,11 +1,11 @@
 {-# LANGUAGE DeriveAnyClass    #-}
 {-# LANGUAGE DeriveGeneric     #-}
 
-module Auth (Auth(..))where
+module Utils.Data.Auth (Auth(..)) where
 
 import           Data.Aeson
 import           GHC.Generics
 
 data Auth = Auth { username :: String
                  , password :: String
-                 } deriving (Generic, FromJSON)
+                 } deriving (Generic, FromJSON, ToJSON)

@@ -2,7 +2,7 @@
 
 module FileSystem where
 
-import File
+import Utils.Data.File
 import Database.MySQL.Simple
 import Database.MySQL.Simple.QueryResults
 import Database.MySQL.Simple.Result

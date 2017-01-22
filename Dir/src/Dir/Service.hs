@@ -13,13 +13,13 @@ import           Control.Monad.Except
 import           Control.Monad.Reader
 import           Database.Redis
 import           Dir
-import           Dir.API
-import           File (FileHandle(..), FileRequest(..))
-import           FSHandler
+import           Directory.API
+import           Utils.Data.File (FileHandle(..), FileRequest(..))
+import           Utils.FSHandler
 import qualified Network.Socket              as Net (SockAddr)
 import           Network.Wai.Handler.Warp
 import           Servant
-import           Session
+import           Utils.Session
 import qualified System.Directory            as Dir
 import           Token
 import qualified Token.Store                 as Tok
@@ -65,13 +65,10 @@ registerFileServer ip = do
 {----------------------------------------------------------------------------------}
 
 app :: HandlerData -> Application
-app inf = serveWithContext api (genAuthServerContext $ redisConn inf) (server inf)
+app inf = serveWithContext dirAPI (genAuthServerContext $ redisConn inf) (server inf)
 
 server :: HandlerData -> Server DirAPI
 server inf = enter (readerToHandler inf) servant
-
-api :: Proxy DirAPI
-api = Proxy
 
 -- entry point to the Directory Service
 startApp :: Int -> IO ()

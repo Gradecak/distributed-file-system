@@ -38,9 +38,8 @@ resolver: lts-7.12
 packages:
 - '.'
 - '/Users/maki/Documents/Haskell/fileSystem/Token/'
-- '/Users/maki/Documents/Haskell/fileSystem/Auth/'
-- '/Users/maki/Documents/Haskell/fileSystem/Dir/'
-- '/Users/maki/Documents/Haskell/fileSystem/Servant/'
+- '/Users/maki/Documents/Haskell/fileSystem/API/'
+- '/Users/maki/Documents/Haskell/fileSystem/Utils/'
 
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)

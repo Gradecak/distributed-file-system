@@ -3,7 +3,7 @@
 {-# LANGUAGE TypeFamilies      #-}
 {-# LANGUAGE TypeOperators     #-}
 
-module Session (genAuthServerContext, authHandler, authenticate, AuthAPI, _authorize) where
+module Utils.Session (genAuthServerContext, authHandler, authenticate, TokenEndPt, _authorize, tokenAPI) where
 
 import           Control.Monad                    (unless)
 import           Control.Monad.IO.Class           (liftIO)
@@ -17,7 +17,10 @@ import qualified Token.Store                      as T (insert, lookupB)
 
 type instance AuthServerData (AuthProtect "cookie-auth") = ()
 
-type AuthAPI =  "authorize" :> ReqBody '[JSON] Token :> Post '[JSON] NoContent
+type TokenEndPt =  "authorize" :> ReqBody '[JSON] Token :> Post '[JSON] NoContent
+
+tokenAPI :: Proxy TokenEndPt
+tokenAPI = Proxy
 
 genAuthServerContext :: Connection -> Context (AuthHandler Request () ': '[])
 genAuthServerContext con = authHandler con :. EmptyContext

@@ -4,7 +4,7 @@
 {-# LANGUAGE TypeFamilies      #-}
 {-# LANGUAGE TypeOperators     #-}
 
-module File (File(..), FileHandle(..), FileMode(..), FileRequest(..))where
+module Utils.Data.File (File(..), FileHandle(..), FileMode(..), FileRequest(..)) where
 
 import qualified Control.Applicative    as App
 import qualified Control.Monad          as Mon

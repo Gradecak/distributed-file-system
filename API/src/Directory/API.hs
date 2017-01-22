@@ -3,13 +3,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators     #-}
 
-module Dir.API where
+module Directory.API (DirAPI, dirAPI) where
 
-import           Dir
-import           File        (FileHandle, FileRequest)
+import           Data.Proxy
 import           Servant.API
-import           Session     (AuthAPI)
 import           Token
+import           Utils.Data.File (FileHandle, FileRequest)
+import           Utils.Session   (TokenEndPt)
 
 
 -- | Endpoints for interacting with the directory server
@@ -20,7 +20,11 @@ import           Token
 -- | /ls        - list the content of a given directory
 -- |            - @param : "path" - path of the directory to list
 -- |            - @return: list of filepaths contained in the listed dirf
-type DirAPI = AuthAPI
+type DirAPI = TokenEndPt
          :<|> "ls"       :> AuthProtect "cookie-auth" :> QueryParam "path" FilePath :> Get '[JSON] [FilePath]
          :<|> "open"     :> AuthProtect "cookie-auth" :> ReqBody '[JSON] FileRequest :> Post '[JSON] (Maybe FileHandle)
          :<|> "register" :> ReqBody '[JSON] (String,Int) :> Post '[JSON] ()
+
+
+dirAPI :: Proxy DirAPI
+dirAPI = Proxy

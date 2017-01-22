@@ -16,16 +16,14 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
                      , src/Auth
-  exposed-modules:     Auth
-                     , Auth.Service
-                     , Auth.API
+  exposed-modules:     Auth.Service
                      , Auth.Client
   build-depends:       base >= 4.7 && < 5
                      , aeson
                      , servant-server >= 0.9.1.1
                      , servant-client >=  0.9.1.1
                      , servant >= 0.9.1.1
-                     , Servant
+                     , Utils
                      , stm
                      , split
                      , network >= 2.6
@@ -36,6 +34,7 @@ library
                      , Token
                      , Dir
                      , cgi
+                     , API
                      , http-client >= 0.4
                      , hedis
                      , bytestring >= 0.10

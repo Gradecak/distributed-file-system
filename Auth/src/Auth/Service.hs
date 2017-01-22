@@ -6,8 +6,8 @@
 
 module Auth.Service (runAuthService) where
 
-import           Auth
-import           Auth.API
+import           Utils.Data.Auth
+import           Authentication.API (AuthAPI, IPAddr, authAPI)
 import           Auth.Client                 (disseminateToken, notifyNewFS)
 import qualified Control.Concurrent.STM      as Stm
 import qualified Control.Concurrent.STM.TVar as TVar
@@ -16,7 +16,7 @@ import           Crypto.PasswordStore
 import qualified Data.ByteString.Char8       as BS
 import           Data.List.Split             (splitOn)
 import qualified Database.Redis              as DB
-import           FSHandler
+import           Utils.FSHandler
 import           Network.Socket              (SockAddr)
 import           Network.Wai.Handler.Warp
 import           Servant
@@ -81,11 +81,8 @@ authenticate conn uname pswd = DB.runRedis conn $ do
       _              -> False
 
 -- Service Initialisation
-api :: Proxy AuthAPI
-api = Proxy
-
 app :: ServiceInfo -> Application
-app inf = serve api $ readerServer inf
+app inf = serve authAPI $ readerServer inf
 
 runAuthService :: IO ()
 runAuthService = do

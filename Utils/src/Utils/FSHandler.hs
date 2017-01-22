@@ -1,7 +1,7 @@
 {-# LANGUAGE RankNTypes    #-}
 {-# LANGUAGE TypeOperators #-}
 
-module FSHandler where
+module Utils.FSHandler where
 
 import           Control.Monad.Except
 import           Control.Monad.Reader

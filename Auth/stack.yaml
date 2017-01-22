@@ -39,7 +39,8 @@ packages:
 - '.'
 - '/Users/maki/Documents/Haskell/fileSystem/Token/'
 - '/Users/maki/Documents/Haskell/fileSystem/Dir/'
-- '/Users/maki/Documents/Haskell/fileSystem/Servant/'
+- '/Users/maki/Documents/Haskell/fileSystem/Utils/'
+- '/Users/maki/Documents/Haskell/fileSystem/API/'
 
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)

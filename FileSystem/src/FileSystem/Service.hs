@@ -13,14 +13,14 @@ import qualified Control.Concurrent.STM.TVar as TVar
 import           Control.Monad.Reader
 import qualified Database.MySQL.Simple       as SQL
 import qualified Database.Redis              as Redis
-import           File
+import           Utils.Data.File
 import           FileSystem                  (insertFile, selectFile, file)
-import           FileSystem.API
-import           FSHandler
+import           FileServer.API
+import           Utils.FSHandler
 import           Network.Wai.Handler.Warp
 import           Servant
 import           Servant.Server
-import           Session
+import           Utils.Session
 import           Token
 import qualified Token.Store                 as Tok
 
@@ -66,11 +66,9 @@ head' [] = Nothing
 head' a = Just $ head a
 
 -- Service Initialisation
-api :: Proxy FileAPI
-api = Proxy
 
 app :: FileServiceInfo -> Application
-app inf = serveWithContext api (genAuthServerContext $ redisCon inf) (server inf)
+app inf = serveWithContext fileAPI (genAuthServerContext $ redisCon inf) (server inf)
 
 server :: FileServiceInfo -> Server FileAPI
 server inf = enter (readerToHandler inf) servant

@@ -17,12 +17,12 @@ library
   hs-source-dirs:      src
                      , src/Dir
   exposed-modules:     Dir
-                     , Dir.API
                      , Dir.Service
   build-depends:       base >= 4.7 && < 5
                      , servant >= 0.9.1.1
                      , servant-server >= 0.9.1.1
-                     , Servant
+                     , Utils
+                     , API
                      , bytestring
                      , aeson >= 0.11
                      , stm
@@ -45,6 +45,11 @@ executable dirServer-exe
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , Dir
+                     , API
+                     , servant >= 0.9.1.1
+                     , servant-client >= 0.9.1.1
+                     , http-client >= 0.4
+                     , split
   default-language:    Haskell2010
 
 source-repository head

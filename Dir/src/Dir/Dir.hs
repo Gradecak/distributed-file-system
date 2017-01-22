@@ -8,7 +8,7 @@ module Dir (getF, toFile, openFNew) where
 
 import           Control.Monad    (mzero)
 import           Data.Aeson
-import           File
+import           Utils.Data.File
 import           GHC.Generics
 import           System.Directory as Dir
 import qualified System.IO        as IO
