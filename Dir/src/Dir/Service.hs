@@ -14,10 +14,11 @@ import           Control.Monad.Reader
 import           Database.Redis
 import           Dir
 import           Dir.API
+import           File (FileHandle(..), FileRequest(..))
+import           FSHandler
 import qualified Network.Socket              as Net (SockAddr)
 import           Network.Wai.Handler.Warp
 import           Servant
-import           FSHandler  -- where our transformed handler monad lives
 import           Session
 import qualified System.Directory            as Dir
 import           Token
@@ -41,6 +42,8 @@ servant =  addAuthorized
             :<|> registerFileServer
 
 {-------------------Handlers for the Severer endpoints ----------------------------}
+
+-- | Store the recieved 'authorized' token in the local token store
 addAuthorized :: Token -> DirM NoContent
 addAuthorized t = do
     Info{redisConn=c} <- ask
@@ -53,7 +56,7 @@ fileSystemOp op _ (Just x) = liftIO $ op x
 fileSystemOp _  _  Nothing = lift $ throwError err400 { errBody="Missing File Path"}
 
 openF :: () -> FileRequest -> DirM (Maybe FileHandle)
-openF _ (Request path mode) = return Nothing
+openF _ (Request path mode) = return (Just (FileHandle path "127.0.0.1"))
 
 registerFileServer :: (String, Int) -> DirM ()
 registerFileServer ip = do
@@ -71,8 +74,8 @@ api :: Proxy DirAPI
 api = Proxy
 
 -- entry point to the Directory Service
-startApp :: IO ()
-startApp = do
+startApp :: Int -> IO ()
+startApp port = do
     x    <- TVar.newTVarIO []
     conn <- connect defaultConnectInfo {connectPort=(PortNumber 6380)}
-    run 8081 $ app (Info {fileServers = x, redisConn = conn})
+    run port $ app (Info {fileServers = x, redisConn = conn})

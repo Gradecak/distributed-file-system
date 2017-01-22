@@ -17,6 +17,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     Session
                      , FSHandler
+                     , File
   build-depends:       base >= 4.7 && < 5
                      , bytestring >= 0.10
                      , Token
@@ -24,6 +25,11 @@ library
                      , servant-server
                      , servant
                      , network
+                     , aeson >= 0.11
+                     , base64-bytestring
+                     , base64-bytestring
+                     , text >= 1.2
+                     , directory >= 1.2
                      , warp
                      , wai
                      , mtl

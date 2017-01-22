@@ -7,7 +7,6 @@ module Auth.Client (disseminateToken, notifyNewFS) where
 import           Data.Aeson
 import           Data.Proxy
 import           Dir.API
-import           GHC.Generics
 import           Network.HTTP.Client (Manager, defaultManagerSettings,
                                       newManager)
 import           Servant.API

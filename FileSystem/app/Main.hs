@@ -1,6 +1,7 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import Dir.Service (startApp)
+import FileSystem.Service (startApp)
 import System.Environment (getArgs)
 
 main :: IO ()

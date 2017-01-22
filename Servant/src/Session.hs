@@ -3,7 +3,7 @@
 {-# LANGUAGE TypeFamilies      #-}
 {-# LANGUAGE TypeOperators     #-}
 
-module Session (genAuthServerContext, authHandler, authenticate, AuthAPI) where
+module Session (genAuthServerContext, authHandler, authenticate, AuthAPI, _authorize) where
 
 import           Control.Monad                    (unless)
 import           Control.Monad.IO.Class           (liftIO)
@@ -34,3 +34,6 @@ authenticate :: Connection -> BS.ByteString -> Handler()
 authenticate c s = do
     x <- liftIO (T.lookupB s c)
     unless x $ throwError (err401 {errBody = "Invalid Auth Cookie"})
+
+_authorize :: Connection -> Token -> IO ()
+_authorize con tok = T.insert tok con

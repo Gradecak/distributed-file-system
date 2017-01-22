@@ -1,11 +1,11 @@
-{-# LANGUAGE RankNTypes        #-}
-{-# LANGUAGE TypeOperators     #-}
+{-# LANGUAGE RankNTypes    #-}
+{-# LANGUAGE TypeOperators #-}
 
 module FSHandler where
 
 import           Control.Monad.Except
 import           Control.Monad.Reader
-import Servant
+import           Servant
 
 type FSHandler a = ReaderT a (ExceptT ServantErr IO)
 
