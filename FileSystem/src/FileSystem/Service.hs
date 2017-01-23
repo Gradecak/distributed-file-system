@@ -15,7 +15,7 @@ import qualified Database.MySQL.Simple       as SQL
 import qualified Database.Redis              as Redis
 import           Utils.Data.File
 import           FileSystem                  (insertFile, selectFile, file)
-import           FileServer.API
+import           File.API
 import           Utils.FSHandler
 import           Network.Wai.Handler.Warp
 import           Servant

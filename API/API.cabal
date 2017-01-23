@@ -17,10 +17,12 @@ library
   hs-source-dirs:      src
                      , src/Authentication
                      , src/Directory
-                     , src/FileServer
+                     , src/File
+                     , src/Transaction
   exposed-modules:     Authentication.API
                      , Directory.API
-                     , FileServer.API
+                     , Transaction.API
+                     , File.API
   build-depends:       base >= 4.7 && < 5
                      , servant >= 0.9.1.1
                      , Token

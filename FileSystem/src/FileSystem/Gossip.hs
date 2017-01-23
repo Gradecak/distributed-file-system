@@ -4,7 +4,7 @@
 
 module FileSystem.Gossip () where
 
-import FileServer.API
+import File.API
 import Network.HTTP.Client (Manager, defaultManagerSettings, newManager)
 import Data.Proxy
 import Servant.API

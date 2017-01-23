@@ -21,9 +21,15 @@ import           Utils.Session   (TokenEndPt)
 -- |            - @param : "path" - path of the directory to list
 -- |            - @return: list of filepaths contained in the listed dirf
 type DirAPI = TokenEndPt
-         :<|> "ls"       :> AuthProtect "cookie-auth" :> QueryParam "path" FilePath :> Get '[JSON] [FilePath]
-         :<|> "open"     :> AuthProtect "cookie-auth" :> ReqBody '[JSON] FileRequest :> Post '[JSON] (Maybe FileHandle)
-         :<|> "register" :> ReqBody '[JSON] (String,Int) :> Post '[JSON] ()
+         :<|> "ls"       :> AuthProtect "cookie-auth"
+                         :> QueryParam "path" FilePath
+                         :> Get '[JSON] [FilePath]
+
+         :<|> "open"     :> ReqBody '[JSON] FileRequest
+                         :> Post '[JSON] (Maybe FileHandle)
+
+         :<|> "register" :> ReqBody '[JSON] (String,Int)
+                         :> Post '[JSON] ()
 
 
 dirAPI :: Proxy DirAPI

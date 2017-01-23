@@ -55,8 +55,8 @@ fileSystemOp :: (a -> IO b) -> () -> Maybe a -> DirM b
 fileSystemOp op _ (Just x) = liftIO $ op x
 fileSystemOp _  _  Nothing = lift $ throwError err400 { errBody="Missing File Path"}
 
-openF :: () -> FileRequest -> DirM (Maybe FileHandle)
-openF _ (Request path mode) = return (Just (FileHandle path "127.0.0.1"))
+openF :: FileRequest -> DirM (Maybe FileHandle)
+openF (Request path mode) = return (Just (FileHandle path "127.0.0.1"))
 
 registerFileServer :: (String, Int) -> DirM ()
 registerFileServer ip = do
