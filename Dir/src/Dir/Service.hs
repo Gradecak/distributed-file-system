@@ -37,12 +37,12 @@ type DirM = FSHandler HandlerData
 -- server
 servant :: ServerT DirAPI DirM
 servant =  addAuthorized
-            :<|> fileSystemOp Dir.listDirectory
+            :<|> fileSystemOp Dir.listDir
             :<|> openF
+            :<|> mv
             :<|> registerFileServer
 
 {-------------------Handlers for the Severer endpoints ----------------------------}
-
 -- | Store the recieved 'authorized' token in the local token store
 addAuthorized :: Token -> DirM NoContent
 addAuthorized t = do
@@ -50,11 +50,18 @@ addAuthorized t = do
     liftIO $ Tok.insert t c
     return NoContent
 
--- perform an action on the host filesystem
-fileSystemOp :: (a -> IO b) -> () -> Maybe a -> DirM b
-fileSystemOp op _ (Just x) = liftIO $ op x
-fileSystemOp _  _  Nothing = lift $ throwError err400 { errBody="Missing File Path"}
+-- | move the file/directory from src to destination (Src, Dest)
+mv :: (FilePath, FilePath) -> DirM ()
+mv srcDest = liftIO $ Dir.move srcDest
 
+-- | a wrapper function for preforming filesystem opeations on the host filesystem
+fileSystemOp :: (a -> IO b) -> Maybe a -> DirM b
+fileSystemOp op (Just x) = liftIO $ op x
+fileSystemOp _   Nothing = lift $ throwError err400 { errBody="Missing File Path"}
+
+-- | Resolve a file request to the server the file is residing on
+-- | if the name can be resolved Successfully returns Just FileHandle else
+-- | else returns Nothing (nil)
 openF :: FileRequest -> DirM (Maybe FileHandle)
 openF (Request path mode) = return (Just (FileHandle path "127.0.0.1"))
 
@@ -70,7 +77,7 @@ app inf = serveWithContext dirAPI (genAuthServerContext $ redisConn inf) (server
 server :: HandlerData -> Server DirAPI
 server inf = enter (readerToHandler inf) servant
 
--- entry point to the Directory Service
+-- | entry point to the Directory Service
 startApp :: Int -> IO ()
 startApp port = do
     x    <- TVar.newTVarIO []

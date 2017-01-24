@@ -30,6 +30,7 @@ library
                      , mtl
                      , Token
                      , network >= 2.6
+                     , filepath
                      , unordered-containers
                      , text
                      , strict

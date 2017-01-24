@@ -1,5 +1,5 @@
 module Lock (Lock(..), LockTable, setLockStatus,
-             checkLockStatus, set, free) where
+             checkLockStatus, set, free, attemptLock) where
 
 import qualified Data.Map as Map
 import  Utils.Data.File
@@ -25,6 +25,20 @@ checkLockStatus :: FilePath -> LockTable -> Lock
 checkLockStatus path table = case Map.lookup path table of
                                Nothing -> Unlocked
                                Just x -> x
+
+-- | attemp to lock a list of files, will only lock if all of them are
+-- | available for locking during attempt
+attemptLock :: [FilePath] -> LockTable -> Lock
+attemptLock paths table =
+    let locks = map (flip checkLockStatus table) paths
+    in foldl1 foldLock locks
+
+-- | helper function for folding down a list of locks
+-- | usefull for deciding if a list of FilePaths is available to lock
+foldLock :: Lock -> Lock -> Lock
+foldLock Unlocked Unlocked = Unlocked
+foldLock Unlocked Locked   = Locked
+foldLock Locked  _         = Locked
 
 -- | Checks the attempted access to file, if Read no lock update is needed
 -- | if write/readwrite the file must be locked before proceeding
