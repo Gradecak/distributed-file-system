@@ -27,11 +27,11 @@ open _ r = do
     file <- liftIO (openFile d r) -- resolve the request to a fileserver
     case file of
       Nothing -> return Nothing   -- if the filenname could not be resolved
-      _       ->  do
+      _       ->  do              -- else:
           x <- aquireFileLock r   -- lock the file
           return $ case x of
-            True  -> file
-            False -> Nothing
+            True  -> file         -- Lock successful
+            False -> Nothing      -- Lock busy
 
 -- | Attemp to lock a file, return True if succesful False if fail
 aquireFileLock :: FileRequest -> TransM Bool
@@ -54,22 +54,31 @@ close _ path = do
 
 -- | Move the location of a file/directory
 move :: () -> (FilePath, FilePath) -> TransM ()
-move _ (src, dest) = do
+move _ mv@(src, dest) = do
     Info{locks=l, dirServer=d} <- ask
-    srcFs <- liftIO $ listDir d src
+    srcFs  <- liftIO $ listDir d src
     destFs <- liftIO $ listDir d dest
     let fs = (fromMaybe [] srcFs) ++ (fromMaybe [] destFs)
-    table <- liftIO $ TVar.readTVarIO l
-    let _ = lockFiles fs table -- will block until files are locked
-    liftIO $ Service.Client.move d (src, dest)
+    lockAll fs -- will 'block' (loop) until all of the files are locked
+    liftIO $ Service.Client.move d mv -- preform the transaction (move)
+    freeAll fs -- free all of the locks aquired during move
 
+-- | To implement transcations, we first have to make sure that the source
+-- | and destination are ready to commit the transaction. To do this, we
+-- | attemp to a aquire a lock on all of the files involved in the transaction
+-- | In case of a failure to aquire a lock we try again until we are
+-- | successful (spin lock)
+lockAll :: [FilePath] -> TransM ()
+lockAll = mapM_ (attemptLock)  -- will on a filepath until lock is
+                                        -- aquired.
+-- | free all locks on a list of files
+freeAll :: [FilePath] -> TransM ()
+freeAll = mapM_ (close ())
 
--- | Transaction is essentially a spin lock, if locking all of the src
--- | and dest files fails we will keep attempting to lock until we are succesfull
--- | only after everything is locked do we execute the tranasction
-lockFiles :: [FilePath] -> LockTable -> ()
-lockFiles fs table =
-    let x = attemptLock fs table
-    in case x of
-      Locked -> lockFiles fs table
-      Unlocked -> ()
+-- | Recursive spin lock function
+attemptLock :: FilePath -> TransM ()
+attemptLock  path = do
+    status <- aquireFileLock (Request path Write) -- we need a write lock to preform move
+    if status
+       then return ()
+       else attemptLock path
