@@ -15,7 +15,7 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-                       src/FileSystem
+                     , src/FileSystem
   exposed-modules:     FileSystem
                      , FileSystem.Gossip
                      , FileSystem.Service
@@ -28,7 +28,11 @@ library
                      , Utils
                      , hedis
                      , API
+                     , random-fu
                      , stm
+                     , random-extras >= 0.19
+                     , cache
+                     , clock
                      , mtl
                      , Utils
                      , http-client >= 0.4

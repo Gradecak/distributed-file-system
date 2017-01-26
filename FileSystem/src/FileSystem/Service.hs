@@ -13,21 +13,24 @@ import qualified Control.Concurrent.STM.TVar as TVar
 import           Control.Monad.Reader
 import qualified Database.MySQL.Simple       as SQL
 import qualified Database.Redis              as Redis
-import           Utils.Data.File
-import           FileSystem                  (insertFile, selectFile, file)
 import           File.API
-import           Utils.FSHandler
+import           FileSystem                  (file, insertFile, selectFile)
+import           FileSystem.Gossip
 import           Network.Wai.Handler.Warp
 import           Servant
 import           Servant.Server
-import           Utils.Session
-import           Token
+import           Token                       (InternalToken, Token)
 import qualified Token.Store                 as Tok
+import           Utils.Data.File
+import           Utils.FSHandler
+import           Utils.Session
 
 -- | information that our handlers will need access to in order to work
-data FileServiceInfo = Info { fileServers :: TVar.TVar [(String,Int)]
-                            , redisCon    :: Redis.Connection
-                            , sqlCon      :: SQL.Connection
+data FileServiceInfo = Info { fileServers   :: TVar.TVar [(String,Int)]
+                            , redisCon      :: Redis.Connection
+                            , sqlCon        :: SQL.Connection
+                            , internalToken :: InternalToken
+                            , gossipTable   :: TVar.TVar GossipTable
                             }
 
 -- | Custom monad that our handlers will run in
@@ -38,6 +41,15 @@ servant :: ServerT FileAPI FileM
 servant = addAuthorized
           :<|> get
           :<|> put
+          :<|> gossip
+
+internalAuth :: Maybe InternalToken -> FileM ()
+internalAuth Nothing = throwError err401 {errBody="Missing service token"}
+internalAuth (Just x) = do
+    Info{internalToken=t} <- ask
+    if x == t
+       then return ()
+       else throwError err401 {errBody="Missing service token"}
 
 -- | add an authorized token to our store
 addAuthorized :: Token -> FileM NoContent
@@ -60,13 +72,32 @@ put _ file = do
     liftIO $ insertFile file c
     return ()
 
+gossip :: Maybe InternalToken -> File -> FileM ()
+gossip tok file = do
+    Info{gossipTable=gossTbl, fileServers=fsList, internalToken=token} <- ask
+    internalAuth tok
+    (table,fs) <- liftIO $ do
+        t      <- TVar.readTVarIO gossTbl
+        f      <- TVar.readTVarIO fsList
+        return (t,f)
+    x <- get () (filepath file) -- retrieve current version of file
+    case x of
+      Nothing -> liftIO $ startGossip file table fs token
+      Just x  -> compareVersions (file,x) token fs
+
+compareVersions ::(File,File) -> InternalToken -> [(String,Int)] -> FileM ()
+compareVersions (fNew,fOld) tok dest = do
+    if staleFile fNew fOld
+       then put () fNew >> (liftIO $ disseminateFile fNew dest tok)
+       else return ()
+
 -- | a safe head function
+-- | used for safely extracting the result of a database query
 head' :: [a] -> Maybe a
 head' [] = Nothing
-head' a = Just $ head a
+head' a  = Just $ head a
 
--- Service Initialisation
-
+-- | Service Initialisation
 app :: FileServiceInfo -> Application
 app inf = serveWithContext fileAPI (genAuthServerContext $ redisCon inf) (server inf)
 
