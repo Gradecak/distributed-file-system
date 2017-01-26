@@ -47,6 +47,7 @@ executable dirServer-exe
   build-depends:       base
                      , Dir
                      , API
+                     , Token
                      , servant >= 0.9.1.1
                      , servant-client >= 0.9.1.1
                      , http-client >= 0.4

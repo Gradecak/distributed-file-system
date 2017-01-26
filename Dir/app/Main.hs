@@ -9,19 +9,20 @@ import           Network.HTTP.Client (Manager, defaultManagerSettings,
 import           Servant.API
 import           Servant.Client
 import           System.Environment  (getArgs)
+import Token (InternalToken)
 
 _ :<|> dir :<|> _ = client authAPI
 
-query :: Int -> ClientM ()
+query :: Int -> ClientM [Char]
 query i = dir (Just i)
 
-registerWithAuth :: Int -> (String,Int) -> IO ()
+registerWithAuth :: Int -> (String,Int) -> IO (Maybe InternalToken)
 registerWithAuth srcPort (addr,port) = do
     manager <- newManager defaultManagerSettings
     res <- runClientM (query srcPort) (ClientEnv manager (BaseUrl Http addr port ""))
-    case res of
-      Left err -> putStrLn $ "Error: " ++ show err
-      Right x -> putStrLn $ "Server Response: " ++ show x
+    return $ case res of
+      Left err -> Nothing
+      Right x -> Just x
 
 main :: IO ()
 main = do
@@ -29,5 +30,7 @@ main = do
     putStrLn "Enter the ip and port of the auth server (<ip>:<port> format)"
     x <- getLine
     let [authIp,authPort] = splitOn ":" x
-    registerWithAuth (read port) (authIp, read authPort)
-    startApp (read port)
+    authResponse <- registerWithAuth (read port) (authIp, read authPort)
+    case authResponse of
+      Nothing -> putStrLn "Cannot Establish connection to AuthServer... Aborting"
+      Just token -> startApp (read port) token

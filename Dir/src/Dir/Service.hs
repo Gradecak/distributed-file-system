@@ -21,14 +21,15 @@ import           Network.Wai.Handler.Warp
 import           Servant
 import           Utils.Session
 import qualified System.Directory            as Dir
-import           Token
+import           Token (Token,InternalToken)
 import qualified Token.Store                 as Tok
 
 type FileServers = TVar.TVar [(String,Int)] -- a handy alias
 
 -- the data that all of our handlers will have access to
-data HandlerData = Info { fileServers :: FileServers
-                        , redisConn   :: Connection
+data HandlerData = Info { fileServers  :: FileServers
+                        , redisConn    :: Connection
+                        , internalToken :: String
                         }
 
 -- alias for the Monad our Handlers will run in
@@ -43,6 +44,14 @@ servant =  addAuthorized
             :<|> registerFileServer
 
 {-------------------Handlers for the Severer endpoints ----------------------------}
+internalAuth :: Maybe InternalToken -> DirM ()
+internalAuth Nothing = throwError err401 {errBody="Missing service token"}
+internalAuth (Just x) = do
+    Info{internalToken=t} <- ask
+    if x == t
+       then return ()
+       else throwError err401 {errBody="Missing service token"}
+
 -- | Store the recieved 'authorized' token in the local token store
 addAuthorized :: Token -> DirM NoContent
 addAuthorized t = do
@@ -51,22 +60,23 @@ addAuthorized t = do
     return NoContent
 
 -- | move the file/directory from src to destination (Src, Dest)
-mv :: (FilePath, FilePath) -> DirM ()
-mv srcDest = liftIO $ Dir.move srcDest
+mv :: Maybe String -> (FilePath, FilePath) -> DirM ()
+mv tok srcDest = internalAuth tok >> (liftIO $ Dir.move srcDest)
 
 -- | a wrapper function for preforming filesystem opeations on the host filesystem
-fileSystemOp :: (a -> IO b) -> Maybe a -> DirM b
-fileSystemOp op (Just x) = liftIO $ op x
-fileSystemOp _   Nothing = lift $ throwError err400 { errBody="Missing File Path"}
+fileSystemOp :: (a -> IO b) -> (Maybe String) -> Maybe a -> DirM b
+fileSystemOp op tok (Just x) = internalAuth tok >> (liftIO $ op x)
+fileSystemOp _  tok  Nothing = internalAuth tok >> (lift $ throwError err400 { errBody="Missing File Path"})
 
 -- | Resolve a file request to the server the file is residing on
 -- | if the name can be resolved Successfully returns Just FileHandle else
 -- | else returns Nothing (nil)
-openF :: FileRequest -> DirM (Maybe FileHandle)
-openF (Request path mode) = return (Just (FileHandle path "127.0.0.1"))
+openF :: Maybe String -> FileRequest -> DirM (Maybe FileHandle)
+openF tok (Request path mode) = internalAuth tok >> return (Just (FileHandle path "127.0.0.1"))
 
-registerFileServer :: (String, Int) -> DirM ()
-registerFileServer ip = do
+registerFileServer :: Maybe String -> (String, Int) -> DirM ()
+registerFileServer tok ip = do
+    internalAuth tok
     Info{fileServers=servers} <- ask
     void $ liftIO $ Stm.atomically $ TVar.modifyTVar' servers (ip :)
 {----------------------------------------------------------------------------------}
@@ -78,8 +88,8 @@ server :: HandlerData -> Server DirAPI
 server inf = enter (readerToHandler inf) servant
 
 -- | entry point to the Directory Service
-startApp :: Int -> IO ()
-startApp port = do
+startApp :: Int -> InternalToken ->  IO ()
+startApp port tok = do
     x    <- TVar.newTVarIO []
     conn <- connect defaultConnectInfo {connectPort=(PortNumber 6380)}
-    run port $ app (Info {fileServers = x, redisConn = conn})
+    run port $ app (Info {fileServers = x, redisConn = conn, internalToken=tok})
