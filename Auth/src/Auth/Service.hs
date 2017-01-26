@@ -21,12 +21,13 @@ import           Network.Socket              (SockAddr)
 import           Network.Wai.Handler.Warp
 import           Servant
 import           Servant.Client
-import           Token                       (Token)
+import           Token                       (Token, InternalToken)
 import           Token.Generate
 
 data ServiceInfo = Info { fileServers :: TVar.TVar [(String,Int)] -- list of file servers registered
                         , dirServer  :: TVar.TVar (String,Int)
                         , redisCon    :: DB.Connection
+                        , internalToken :: String
                         }
 
 -- essentially an alias for type AuthM = ReaderT ServiceInfo (ExceptT ServantErr IO)
@@ -34,29 +35,13 @@ type AuthM = FSHandler ServiceInfo
 
 server :: ServerT AuthAPI AuthM
 server = serveToken
-         :<|> registerDir
+         :<|> newDir
          :<|> newFS
+         :<|> newTrans
 
--- add a new FileServer to the list of Servers and notify all other
--- services in the system of the new service
-newFS :: SockAddr -> Maybe Int-> AuthM ()
-newFS ip Nothing = throwError err417{errBody = "Missing Service Port"}
-newFS ip p@(Just port) = do
-    Info{fileServers=f, dirServer=d} <- ask
-    liftIO $ do
-        fs <- TVar.readTVarIO f
-        ds <- TVar.readTVarIO d
-        notifyNewFS (head $ splitOn ":" $ show ip, port) (ds:fs)
-        Stm.atomically $ TVar.modifyTVar' f  ((head $ splitOn ":" $ show ip, port) :)
 
-registerDir  :: SockAddr -> Maybe Int -> AuthM ()
-registerDir _ Nothing = throwError err417{errBody = "Missing Service Port"}
-registerDir addr (Just port) = do
-    Info{dirServer=d} <- ask
-    liftIO $ Stm.atomically $ TVar.writeTVar d (head $ splitOn ":" $ show addr,port)
-
--- authenticate a user with the system, generate a token and
--- notify all registered services of the new valid token
+-- | authenticate a user with the system, generate a token and
+-- | notify all registered services of the new valid token
 serveToken :: SockAddr -> Auth -> AuthM (Token, (IPAddr, Int))
 serveToken ip (Auth a b) = do
     Info{redisCon=c, dirServer=d, fileServers=f} <- ask
@@ -69,6 +54,40 @@ serveToken ip (Auth a b) = do
         disseminateToken t (ds:fs) --notify all services of token
         return (t, ds)
       else throwError err403 {errBody = "Authentication Failure"}
+
+-- | record the new directory service
+-- | Issue the new direcotry service with a session token
+-- | and a list of the current file servers
+newDir  :: SockAddr -> Maybe Int -> AuthM (InternalToken, [(IPAddr, Int)])
+newDir _ Nothing = throwError err417{errBody = "Missing Service Port"}
+newDir addr (Just port) = do
+    Info{dirServer=d, internalToken=tok, fileServers=tfs} <- ask
+    fs <- liftIO $ do Stm.atomically $ TVar.writeTVar d (head $ splitOn ":" $ show addr,port)
+                      TVar.readTVarIO tfs
+    return (tok, fs)
+
+-- | add a new FileServer to the list of Servers and notify all other
+-- | services in the system of the new service
+newFS :: SockAddr -> Maybe Int-> AuthM (InternalToken, [(IPAddr, Int)])
+newFS ip Nothing = throwError err417{errBody = "Missing Service Port"}
+newFS ip (Just port) = do
+    Info{fileServers=f, dirServer=d, internalToken=tok} <- ask
+    liftIO $ do
+        fs <- TVar.readTVarIO f
+        ds <- TVar.readTVarIO d
+        notifyNewFS (head $ splitOn ":" $ show ip, port) (ds:fs) tok
+        Stm.atomically $ TVar.modifyTVar' f  ((head $ splitOn ":" $ show ip, port) :)
+        return (tok, fs)
+
+-- | serve the transaction server attempting to connect to the system with
+-- | the internal session token and the address (Ip, port) of the directory service
+newTrans :: SockAddr -> Maybe Int -> AuthM (InternalToken, (IPAddr, Int))
+newTrans ip Nothing = throwError err417{errBody = "Missing Service Port"}
+newTrans ip (Just port) = do
+    Info{fileServers=f, dirServer=d, internalToken=tok} <- ask
+    liftIO $ do
+        ds <- TVar.readTVarIO d
+        return (tok, ds)
 
 -- lookup the user in the database
 -- @return True  -> Password == Hash
@@ -89,7 +108,8 @@ runAuthService = do
     fs <- TVar.newTVarIO []
     ds <- TVar.newTVarIO ("",-1)
     conn <- DB.connect DB.defaultConnectInfo
-    run 8080 $ app (Info {fileServers=fs, dirServer=ds, redisCon=conn})
+    internalTok <- genInternalToken
+    run 8080 $ app (Info {fileServers=fs, dirServer=ds, redisCon=conn, internalToken=internalTok})
 
 readerServer :: ServiceInfo -> Server AuthAPI
 readerServer inf = enter (readerToHandler inf) server
