@@ -3,10 +3,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators     #-}
 
-module Transaction.API () where
+module Transaction.API (TransAPI, transAPI) where
 
 import Utils.Session
 import Data.Proxy
+import Utils.InternalAuth
 import Utils.Data.File (FileRequest, FileHandle)
 import Servant.API
 
