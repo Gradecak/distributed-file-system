@@ -11,12 +11,12 @@ import           Servant.Client
 import           System.Environment  (getArgs)
 import Token (InternalToken)
 
-_ :<|> dir :<|> _ = client authAPI
+_ :<|> dir :<|> _ :<|> _ = client authAPI
 
-query :: Int -> ClientM [Char]
+query :: Int -> ClientM (InternalToken, [(String, Int)])
 query i = dir (Just i)
 
-registerWithAuth :: Int -> (String,Int) -> IO (Maybe InternalToken)
+registerWithAuth :: Int -> (String,Int) -> IO (Maybe (InternalToken, [(String, Int)]))
 registerWithAuth srcPort (addr,port) = do
     manager <- newManager defaultManagerSettings
     res <- runClientM (query srcPort) (ClientEnv manager (BaseUrl Http addr port ""))
@@ -33,4 +33,4 @@ main = do
     authResponse <- registerWithAuth (read port) (authIp, read authPort)
     case authResponse of
       Nothing -> putStrLn "Cannot Establish connection to AuthServer... Aborting"
-      Just token -> startApp (read port) token
+      Just (token,fileservers) -> startApp (read port) token fileservers

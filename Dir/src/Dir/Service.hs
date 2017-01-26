@@ -14,21 +14,21 @@ import           Control.Monad.Reader
 import           Database.Redis
 import           Dir
 import           Directory.API
-import           Utils.Data.File (FileHandle(..), FileRequest(..))
-import           Utils.FSHandler
 import qualified Network.Socket              as Net (SockAddr)
 import           Network.Wai.Handler.Warp
 import           Servant
-import           Utils.Session
 import qualified System.Directory            as Dir
-import           Token (Token,InternalToken)
+import           Token                       (InternalToken, Token)
 import qualified Token.Store                 as Tok
+import           Utils.Data.File             (FileHandle (..), FileRequest (..))
+import           Utils.FSHandler
+import           Utils.Session
 
 type FileServers = TVar.TVar [(String,Int)] -- a handy alias
 
 -- the data that all of our handlers will have access to
-data HandlerData = Info { fileServers  :: FileServers
-                        , redisConn    :: Connection
+data HandlerData = Info { fileServers   :: FileServers
+                        , redisConn     :: Connection
                         , internalToken :: String
                         }
 
@@ -37,27 +37,31 @@ type DirM = FSHandler HandlerData
 
 -- server
 servant :: ServerT DirAPI DirM
-servant =  addAuthorized
+servant =   -- public endpoint handlers
+                 addAuthorized
+            :<|> publicLS
+            -- private Endpoint hanlders
             :<|> fileSystemOp Dir.listDir
             :<|> openF
             :<|> mv
             :<|> registerFileServer
 
 {-------------------Handlers for the Severer endpoints ----------------------------}
-internalAuth :: Maybe InternalToken -> DirM ()
-internalAuth Nothing = throwError err401 {errBody="Missing service token"}
-internalAuth (Just x) = do
-    Info{internalToken=t} <- ask
-    if x == t
-       then return ()
-       else throwError err401 {errBody="Missing service token"}
-
 -- | Store the recieved 'authorized' token in the local token store
 addAuthorized :: Token -> DirM NoContent
 addAuthorized t = do
     Info{redisConn=c} <- ask
     liftIO $ Tok.insert t c
     return NoContent
+
+-- | list the contents of a directory, exposed to the public
+publicLS :: () -> Maybe FilePath -> DirM [FilePath]
+publicLS _ Nothing  = throwError err400 {errBody="Missing file path"}
+publicLS _ (Just path) = do
+    x <- liftIO $ Dir.listDir path
+    case x of
+      Nothing        -> throwError err404 {errBody="Directory not found"}
+      (Just content) -> return content
 
 -- | move the file/directory from src to destination (Src, Dest)
 mv :: Maybe String -> (FilePath, FilePath) -> DirM ()
@@ -81,6 +85,18 @@ registerFileServer tok ip = do
     void $ liftIO $ Stm.atomically $ TVar.modifyTVar' servers (ip :)
 {----------------------------------------------------------------------------------}
 
+-- | Utility function for verifying the internal session token
+-- | should be called at the start of every handler that is handling a
+-- | 'ProtectInternal' endpoint
+internalAuth :: Maybe InternalToken -> DirM ()
+internalAuth Nothing = throwError err401 {errBody="Missing service token"}
+internalAuth (Just x) = do
+    Info{internalToken=t} <- ask
+    if x == t
+       then return ()
+       else throwError err401 {errBody="Missing service token"}
+
+
 app :: HandlerData -> Application
 app inf = serveWithContext dirAPI (genAuthServerContext $ redisConn inf) (server inf)
 
@@ -88,8 +104,8 @@ server :: HandlerData -> Server DirAPI
 server inf = enter (readerToHandler inf) servant
 
 -- | entry point to the Directory Service
-startApp :: Int -> InternalToken ->  IO ()
-startApp port tok = do
-    x    <- TVar.newTVarIO []
+startApp :: Int -> InternalToken -> [(String,Int)] -> IO ()
+startApp port tok fileservers = do
+    x    <- TVar.newTVarIO fileservers
     conn <- connect defaultConnectInfo {connectPort=(PortNumber 6380)}
     run port $ app (Info {fileServers = x, redisConn = conn, internalToken=tok})
