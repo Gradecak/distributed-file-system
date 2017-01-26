@@ -20,6 +20,7 @@ library
   exposed-modules:     Utils.Session
                      , Utils.FSHandler
                      , Utils.Data.File
+                     , Utils.InternalAuth
                      , Utils.Data.Auth
   build-depends:       base >= 4.7 && < 5
                      , bytestring >= 0.10
