@@ -110,7 +110,6 @@ attemptLock  path = do
        then return ()
        else attemptLock path
 
-
 app :: HandlerData -> Application
 app inf = serveWithContext transAPI (genAuthServerContext $ redisConn inf) (server inf)
 

@@ -1,19 +1,16 @@
-module Main where
+module Main (main) where
 
-import Authentication.API (authAPI)
+import Authentication.API (authAPI, transEndPt)
 import Data.Proxy
 import Network.HTTP.Client (Manager, defaultManagerSettings, newManager)
-import Servant.API
 import Servant.Client
 import Service (startApp)
 import Data.List.Split (splitOn)
 import System.Environment (getArgs)
 import Token (InternalToken)
 
-_ :<|> _ :<|> _ :<|> trans = client authAPI
-
 query :: Int -> ClientM (InternalToken, (String,Int))
-query i = trans (Just i)
+query i = transEndPt (Just i)
 
 registerWithAuth :: Int -> (String,Int) -> IO (Maybe (InternalToken, (String,Int)))
 registerWithAuth srcPort (addr,port) = do

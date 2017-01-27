@@ -1,48 +1,43 @@
 module Service.Client (openFile, listDir, move) where
 
-
-import Directory.API
-import Servant.Client
-import Utils.Data.File
+import           Directory.API       (mvEndPt, openEndPt, _lsEndPt)
 import           Network.HTTP.Client (Manager, defaultManagerSettings,
                                       newManager)
-import Servant.API
-import Token (InternalToken)
+import           Servant.API
+import           Servant.Client
+import           Token               (InternalToken)
+import           Utils.Data.File     (FileHandle, FileRequest)
 
--- | Pattern match away the automatically generated Servant-Client functions
--- | for interacting with the Directory API
-_ :<|> ls :<|> open :<|> mv :<|> _ = client dirAPI
-
--- | lift our request into the ClientM monad
+-- | a Higher order function that will lift our endpoint query into
+-- the ClientM monad
 query :: a -> (a -> ClientM b) -> ClientM b
 query a b = b a
 
--- | attemp to open a file (Resolve a file to a fileserver)
--- | return Nothing if error or file request is malformed
+-- | Attemp to open a file (Resolve a file to a fileserver) return
+--  Nothing if error or file request is malformed
 openFile :: (String,Int) -> FileRequest -> InternalToken -> IO (Maybe FileHandle)
 openFile dest param tok = do
-    res <- runQuery dest param (open (Just tok))
+    res <- runQuery dest param (openEndPt (Just tok))
     return $ case res of
       Left err -> Nothing
       Right x  -> x
 
--- | list the contents of a filepath
--- | returns Nothing if path is invalid (not a directory or doesnt exist)
+-- | list the contents of a filepath returns Nothing if path is
+--  invalid (not a directory or doesnt exist)
 listDir :: (String,Int) -> FilePath -> InternalToken -> IO (Maybe [FilePath])
 listDir dest param tok = do
-    res <- runQuery dest (Just param) (ls (Just tok))
+    res <- runQuery dest (Just param) (_lsEndPt (Just tok))
     return $ case res of
       Left err -> Nothing
       Right x  -> x
 
--- | Move a file/folder in the directory server
--- | returns nothing
+-- | Move a file/folder in the directory server. Returns nil
 move :: (String,Int) -> (FilePath,FilePath) -> InternalToken -> IO ()
 move dest param tok = do
-    res <- runQuery dest param (mv (Just tok))
+    res <- runQuery dest param (mvEndPt (Just tok))
     case res of
       Left err -> print err
-      Right x -> return x
+      Right x  -> return x
 
 -- | run a query on an endpoint
 runQuery :: (String,Int) -> a -> (a -> ClientM b) -> IO (Either ServantError b)
