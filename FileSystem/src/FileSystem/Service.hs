@@ -104,13 +104,14 @@ app inf = serveWithContext fileAPI (genAuthServerContext $ redisCon inf) (server
 server :: FileServiceInfo -> Server FileAPI
 server inf = enter (readerToHandler inf) servant
 
-startApp :: Int -> IO ()
-startApp port = do
-    fs <- TVar.newTVarIO []
-    ds <- TVar.newTVarIO []
+startApp :: Int -> InternalToken -> [(String,Int)] -> IO ()
+startApp port tok fileserv = do
+    fs       <- TVar.newTVarIO fileserv
+    cache    <- newGossipCache
+    goss     <- TVar.newTVarIO cache
     redisCon <- Redis.connect Redis.defaultConnectInfo
-    sqlCon <- SQL.connect SQL.defaultConnectInfo{SQL.connectHost="127.0.0.1",
-                                                 SQL.connectUser="root",
-                                                 SQL.connectPassword="poo",
-                                                 SQL.connectDatabase="files"}
-    run port $ app (Info {fileServers=fs, redisCon=redisCon, sqlCon=sqlCon})
+    sqlCon   <- SQL.connect SQL.defaultConnectInfo{SQL.connectHost="127.0.0.1",
+                                                   SQL.connectUser="root",
+                                                   SQL.connectPassword="poo",
+                                                   SQL.connectDatabase="files"}
+    run port $ app (Info {fileServers=fs, redisCon=redisCon, sqlCon=sqlCon, internalToken=tok, gossipTable=goss})

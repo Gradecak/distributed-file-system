@@ -55,7 +55,7 @@ disseminateFile :: File -> [(String,Int)] -> InternalToken -> IO ()
 disseminateFile file dest tok = do
     manager <- newManager defaultManagerSettings
     endpts <- gossipCandidates dest
-    let destinations = genDestinations endpts manager
+    let destinations = genDestinations manager endpts
     mapM_ (runClientM (goss (Just tok) file)) destinations
 
 startGossip :: File -> GossipTable -> [(String,Int)] -> InternalToken -> IO ()
@@ -67,8 +67,8 @@ startGossip file table endpts tok = do
         cacheFile file table
         disseminateFile file endpts tok
 
-genDestinations :: [(String,Int)] -> Manager -> [ClientEnv]
-genDestinations x m = map (\(ip,port) -> ClientEnv m (BaseUrl Http ip port "")) x
+genDestinations :: Manager -> [(String,Int)] -> [ClientEnv]
+genDestinations m = map (\(ip,port) -> ClientEnv m (BaseUrl Http ip port ""))
 
 
 gossipCandidates :: [(String,Int)] -> IO ([(String,Int)])
