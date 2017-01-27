@@ -1,16 +1,15 @@
-{-# LANGUAGE DataKinds         #-}
-{-# LANGUAGE DeriveAnyClass    #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeOperators     #-}
+{-# LANGUAGE DataKinds     #-}
+{-# LANGUAGE TypeOperators #-}
 
-module Directory.API (DirAPI, dirAPI) where
+module Directory.API (DirAPI, dirAPI, lsEndPt, _lsEndPt,
+                      openEndPt, mvEndPt, registerEndPt) where
 
 import           Data.Proxy
 import           Servant.API
-import           Token
+import           Servant.Client
 import           Utils.Data.File    (FileHandle, FileRequest)
-import           Utils.InternalAuth
-import           Utils.Session      (TokenEndPt)
+import           Utils.InternalAuth              --for protecting internal endpts
+import           Utils.Session      (TokenEndPt) --for protecting public endpts
 
 
 -- | Endpoints for interacting with the directory server
@@ -44,3 +43,5 @@ type DirAPI = TokenEndPt
 
 dirAPI :: Proxy DirAPI
 dirAPI = Proxy
+
+_ :<|> lsEndPt :<|> _lsEndPt :<|>openEndPt :<|> mvEndPt :<|> registerEndPt = client dirAPI

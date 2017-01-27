@@ -1,12 +1,14 @@
-{-# LANGUAGE DataKinds         #-}
-{-# LANGUAGE TypeOperators     #-}
+{-# LANGUAGE DataKinds     #-}
+{-# LANGUAGE TypeOperators #-}
+module Authentication.API (AuthAPI,IPAddr,authAPI
+                          , authEndPt, dirEndPt, fsysEndPt,
+                            transEndPt) where
 
-module Authentication.API (AuthAPI,IPAddr,authAPI) where
-
-import Utils.Data.Auth
-import Servant.API
-import Data.Proxy
-import Token
+import           Data.Proxy
+import           Servant.API
+import           Servant.Client
+import           Token
+import           Utils.Data.Auth
 
 
 type IPAddr = String -- a nice little alias
@@ -29,3 +31,6 @@ type AuthAPI =  "auth"  :> RemoteHost
 
 authAPI :: Proxy AuthAPI
 authAPI = Proxy
+
+
+authEndPt :<|> dirEndPt :<|> fsysEndPt :<|> transEndPt = client authAPI
