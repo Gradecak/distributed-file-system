@@ -1,0 +1,95 @@
+
+./app/Main.hs,176
+module Main Main0,1
+query query12,13
+query query13,14
+registerWithAuth registerWithAuth15,16
+registerWithAuth registerWithAuth16,17
+main main23,24
+main main24,25
+
+./Setup.hs,15
+main main1,2
+
+./src/FileSystem/FileSystem.hs,591
+module FileSystem FileSystem2,3
+instance instance14,15
+type SqlQuery SqlQuery23,24
+type SqlQuery a a23,24
+type SqlCommand SqlCommand24,25
+sqlQuery sqlQuery27,28
+sqlQuery sqlQuery28,29
+sqlQuery_ sqlQuery_31,32
+sqlQuery_ sqlQuery_32,33
+sqlCmd sqlCmd35,36
+sqlCmd sqlCmd36,37
+sqlCmd_ sqlCmd_39,40
+sqlCmd_ sqlCmd_40,41
+(>>>)>>>43,44
+(>(44,45
+insertFile insertFile49,50
+insertFile insertFile50,51
+selectAllFiles selectAllFiles52,53
+selectAllFiles selectAllFiles53,54
+selectFile selectFile55,56
+selectFile selectFile56,57
+file file58,59
+file file59,60
+
+./src/FileSystem/Gossip.hs,703
+module FileSystem.Gossip FileSystem.Gossip4,5
+data Propagated Propagated24,25
+data Propagated = PropagatedPropagated24,25
+type GossipTable GossipTable26,27
+_ _28,29
+newGossipCache newGossipCache32,33
+newGossipCache newGossipCache33,34
+inCache inCache37,38
+inCache inCache38,39
+staleFile staleFile45,46
+staleFile staleFile46,47
+cacheFile cacheFile50,51
+cacheFile cacheFile51,52
+disseminateFile disseminateFile53,54
+disseminateFile disseminateFile54,55
+startGossip startGossip60,61
+startGossip startGossip61,62
+genDestinations genDestinations69,70
+genDestinations genDestinations70,71
+gossipCandidates gossipCandidates73,74
+gossipCandidates gossipCandidates74,75
+
+./src/FileSystem/Service.hs,1020
+module FileSystem.Service FileSystem.Service7,8
+data FileServiceInfo FileServiceInfo27,28
+data FileServiceInfo = Info Info27,28
+data FileServiceInfo = Info { fileServers fileServers27,28
+                            , redisCon redisCon28,29
+                            , sqlCon sqlCon29,30
+                            , internalToken internalToken30,31
+                            , gossipTable gossipTable31,32
+type FileM FileM35,36
+servant servant38,39
+servant servant39,40
+repl repl45,46
+repl repl46,47
+internalAuth internalAuth48,49
+internalAuth internalAuth49,50
+addAuthorized addAuthorized57,58
+addAuthorized addAuthorized58,59
+get get64,65
+get get65,66
+put put71,72
+put put72,73
+gossip gossip77,78
+gossip gossip78,79
+compareVersions compareVersions90,91
+compareVersions compareVersions91,92
+head' head'98,99
+head' head'99,100
+app app103,104
+app app104,105
+server server106,107
+server server107,108
+startApp startApp109,110
+startApp startApp110,111

@@ -1,20 +1,17 @@
 module Main where
 
-import           Authentication.API  (authAPI)
+import           Authentication.API  (fsysEndPt)
 import           Data.List.Split     (splitOn)
 import           FileSystem.Service  (startApp)
 import           Network.HTTP.Client (Manager, defaultManagerSettings,
                                       newManager)
-import           Servant.API
 import           Servant.Client
 import           System.Environment  (getArgs)
 import           System.Environment  (getArgs)
 import           Token               (InternalToken)
 
-_ :<|> _ :<|> fsys :<|> _  = client authAPI
-
 query :: Int -> ClientM (InternalToken, [(String, Int)])
-query i = fsys (Just i)
+query i = fsysEndPt (Just i)
 
 registerWithAuth :: Int -> (String,Int) -> IO (Maybe (InternalToken, [(String, Int)]))
 registerWithAuth srcPort (addr,port) = do

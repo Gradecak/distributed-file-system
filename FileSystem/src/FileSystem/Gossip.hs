@@ -1,40 +1,40 @@
-{-# LANGUAGE DataKinds     #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE TypeOperators #-}
-
 module FileSystem.Gossip ( newGossipCache, inCache,
                            cacheFile, startGossip,
-                           disseminateFile, staleFile, GossipTable,
-                         gossipCandidates) where
+                           disseminateFile, staleFile,
+                           GossipTable, gossipCandidates) where
 
-import File.API (fileAPI)
-import Network.HTTP.Client (Manager, defaultManagerSettings, newManager)
-import Data.Proxy
-import Servant.API
-import Data.Random.Extras (sample)
-import Data.Random.RVar
-import Data.Random
-import System.Clock
-import Servant.Client
-import FileSystem (selectFile)
-import Data.Cache
-import Token
-import Utils.Data.File
-import Servant.Client
+-- provides a key/value store with timeouts
+import           Data.Cache
 
+-- allows us to randomly sample a list of fileservers
+import           Data.Random
+import           Data.Random.Extras  (sample)
+import           Data.Random.RVar
+
+import           File.API            (gossipEndPt)
+import           FileSystem          (selectFile)
+import           Network.HTTP.Client (Manager, defaultManagerSettings,
+                                      newManager)
+import           Servant.API
+import           Servant.Client
+import           Servant.Client
+import           System.Clock
+import           Token
+import           Utils.Data.File
+
+-- | A dummy datatype that we will use as a value for our cache
 data Propagated = Propagated
 
+-- | Alias for our Cache
 type GossipTable = Cache FilePath Propagated
 
-_ :<|> _ :<|> _ :<|> goss :<|> _ = client fileAPI
-
 -- | Create a new cache where we can keep track of our gossip protocol
--- | forwarding, entries in the gossip cache will expire after 15 minutes
+-- forwarding, entries in the gossip cache will expire after 10 minutes
 newGossipCache :: IO GossipTable
-newGossipCache = newCache (Just $ TimeSpec{sec=900,nsec=0})
+newGossipCache = newCache (Just $ TimeSpec{sec=600,nsec=0})
 
 -- | check if a filepath is in the cache (ie it has been 'gossiped about'
--- | before)
+-- before)
 inCache :: FilePath -> GossipTable -> IO Bool
 inCache path table = do
     x <- Data.Cache.lookup table path
@@ -56,7 +56,7 @@ disseminateFile file dest tok = do
     manager <- newManager defaultManagerSettings
     endpts <- gossipCandidates dest
     let destinations = genDestinations manager endpts
-    mapM_ (runClientM (goss (Just tok) file)) destinations
+    mapM_ (runClientM (gossipEndPt (Just tok) file)) destinations
 
 startGossip :: File -> GossipTable -> [(String,Int)] -> InternalToken -> IO ()
 startGossip file table endpts tok = do

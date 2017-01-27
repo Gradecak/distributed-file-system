@@ -5,8 +5,7 @@
 {-# LANGUAGE TypeFamilies      #-}
 {-# LANGUAGE TypeOperators     #-}
 
-module FileSystem.Service (startApp)
-where
+module FileSystem.Service (startApp) where
 
 import qualified Control.Concurrent.STM      as Stm
 import qualified Control.Concurrent.STM.TVar as TVar
@@ -42,10 +41,10 @@ servant = addAuthorized
           :<|> get
           :<|> put
           :<|> gossip
-          :<|> repl
+          :<|> create
 
-repl :: Maybe InternalToken -> File -> FileM ()
-repl _ _ = return ()
+create :: Maybe InternalToken -> File -> FileM ()
+create tok file = internalAuth tok >> put () file
 
 internalAuth :: Maybe InternalToken -> FileM ()
 internalAuth Nothing = throwError err401 {errBody="Missing service token"}
