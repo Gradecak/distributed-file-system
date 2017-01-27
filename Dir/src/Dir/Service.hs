@@ -20,7 +20,7 @@ import           Servant
 import qualified System.Directory            as Dir
 import           Token                       (InternalToken, Token)
 import qualified Token.Store                 as Tok
-import           Utils.Data.File             (FileHandle (..), FileRequest (..))
+import           Utils.Data.File             (FileHandle (..), FileRequest (..), FileMode(..))
 import           Utils.FSHandler
 import           Utils.Session
 
@@ -40,7 +40,7 @@ servant :: ServerT DirAPI DirM
 servant =   -- public endpoint handlers
                  addAuthorized
             :<|> publicLS
-            -- private Endpoint hanlders
+            -- private Endpoint handlers
             :<|> fileSystemOp Dir.listDir
             :<|> openF
             :<|> mv
@@ -65,18 +65,31 @@ publicLS _ (Just path) = do
 
 -- | move the file/directory from src to destination (Src, Dest)
 mv :: Maybe String -> (FilePath, FilePath) -> DirM ()
-mv tok srcDest = internalAuth tok >> (liftIO $ Dir.move srcDest)
+mv tok srcDest = internalAuth tok >> (liftIO $ Dir.move $ relative srcDest)
+  -- convert our touple of paths into relative paths for use with the 'shadow filesystem'
+  where relative = (\(p1,p2) -> (makeRelative p1, makeRelative p2))
 
 -- | a wrapper function for preforming filesystem opeations on the host filesystem
-fileSystemOp :: (a -> IO b) -> (Maybe String) -> Maybe a -> DirM b
-fileSystemOp op tok (Just x) = internalAuth tok >> (liftIO $ op x)
+fileSystemOp :: (FilePath -> IO b) -> (Maybe String) -> Maybe FilePath -> DirM b
+fileSystemOp op tok (Just path) = internalAuth tok >> (liftIO $ op $ makeRelative path)
 fileSystemOp _  tok  Nothing = internalAuth tok >> (lift $ throwError err400 { errBody="Missing File Path"})
 
--- | Resolve a file request to the server the file is residing on
--- | if the name can be resolved Successfully returns Just FileHandle else
--- | else returns Nothing (nil)
+-- | Resolve a file request to the server the file is residing on. if the
+-- requested mode is Read we will only try to read the file, returning Nothing
+-- if it fails. if the requested mode is Read/ReadWrite, we will open a new file
+-- if reading fails, returning the newly opened File
 openF :: Maybe String -> FileRequest -> DirM (Maybe FileHandle)
-openF tok (Request path mode) = internalAuth tok >> return (Just (FileHandle path "127.0.0.1"))
+openF tok (Request path Read) = internalAuth tok >> (liftIO $ getF $ makeRelative path)
+openF tok (Request path _) = do
+    internalAuth tok
+    Info{fileServers=f} <- ask
+    liftIO $ do
+        file <- getF (makeRelative path) -- attempt to read file
+        case file of
+          Just f  -> return file         -- if file exists return file
+          Nothing -> do                  -- else open new file
+              fs <- TVar.readTVarIO f
+              fmap Just (newFile path fs)
 
 registerFileServer :: Maybe String -> (String, Int) -> DirM ()
 registerFileServer tok ip = do

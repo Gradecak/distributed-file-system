@@ -15,7 +15,7 @@ import           Utils.Session
 
 -- | Pattern match away the automatically generated Servant-Client functions
 -- | for interacting with the Directory API
-_ :<|> _ :<|> _ :<|> _ :<|> register = client dirAPI
+_ :<|> _ :<|> _ :<|> _ :<|> _ :<|> register = client dirAPI
 authorize                            = client tokenAPI
 
 -- | a HOF for lifting a query into the ClientM monad

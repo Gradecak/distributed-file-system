@@ -26,7 +26,7 @@ data Propagated = Propagated
 
 type GossipTable = Cache FilePath Propagated
 
-_ :<|> _ :<|> _ :<|> goss = client fileAPI
+_ :<|> _ :<|> _ :<|> goss :<|> _ = client fileAPI
 
 -- | Create a new cache where we can keep track of our gossip protocol
 -- | forwarding, entries in the gossip cache will expire after 15 minutes

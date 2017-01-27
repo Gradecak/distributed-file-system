@@ -1,8 +1,6 @@
 {-# LANGUAGE DeriveAnyClass    #-}
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeFamilies      #-}
-{-# LANGUAGE TypeOperators     #-}
 
 module Utils.Data.File (File(..), FileHandle(..), FileMode(..), FileRequest(..)) where
 
@@ -34,7 +32,7 @@ data File = File { name     :: String
 
 -- | Indicates the location of a file on the remote server
 data FileHandle = FileHandle  { path     :: FilePath
-                              , serverIp :: String
+                              , serverIp :: (String,Int)
                               } deriving (Show, Read, Generic, FromJSON, ToJSON)
 
 -- | our FileMode ADT will be used to Mimick the Unix file access standard

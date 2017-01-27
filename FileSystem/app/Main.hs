@@ -1,8 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Main where
 
 import           Authentication.API  (authAPI)
-import           Data.List.Split          (splitOn)
+import           Data.List.Split     (splitOn)
 import           FileSystem.Service  (startApp)
 import           Network.HTTP.Client (Manager, defaultManagerSettings,
                                       newManager)

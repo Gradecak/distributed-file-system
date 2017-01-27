@@ -42,6 +42,10 @@ servant = addAuthorized
           :<|> get
           :<|> put
           :<|> gossip
+          :<|> repl
+
+repl :: Maybe InternalToken -> File -> FileM ()
+repl _ _ = return ()
 
 internalAuth :: Maybe InternalToken -> FileM ()
 internalAuth Nothing = throwError err401 {errBody="Missing service token"}
@@ -109,7 +113,7 @@ startApp port tok fileserv = do
     fs       <- TVar.newTVarIO fileserv
     cache    <- newGossipCache
     goss     <- TVar.newTVarIO cache
-    redisCon <- Redis.connect Redis.defaultConnectInfo
+    redisCon <- Redis.connect Redis.defaultConnectInfo {Redis.connectPort=(Redis.PortNumber 6382)}
     sqlCon   <- SQL.connect SQL.defaultConnectInfo{SQL.connectHost="127.0.0.1",
                                                    SQL.connectUser="root",
                                                    SQL.connectPassword="poo",

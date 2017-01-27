@@ -38,7 +38,6 @@ resolver: lts-7.12
 packages:
 - '.'
 - '/Users/maki/Documents/Haskell/fileSystem/Token/'
-- '/Users/maki/Documents/Haskell/fileSystem/Dir/'
 - '/Users/maki/Documents/Haskell/fileSystem/Utils/'
 - '/Users/maki/Documents/Haskell/fileSystem/API/'
 

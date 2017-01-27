@@ -23,8 +23,8 @@ import           Utils.Session      (TokenEndPt)
 -- |            - @return: list of filepaths contained in the listed dir
 type DirAPI = TokenEndPt
          :<|> "list"     :> AuthProtect "cookie-auth"
-          :> QueryParam "path" FilePath
-          :> Get '[JSON] ([FilePath])
+                         :> QueryParam "path" FilePath
+                         :> Get '[JSON] ([FilePath])
 
          :<|> "ls"       :> ProtectInternal
                          :> QueryParam "path" FilePath

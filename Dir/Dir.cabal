@@ -28,6 +28,8 @@ library
                      , stm
                      , transformers
                      , mtl
+                     , random-extras >= 0.19
+                     , random-fu
                      , Token
                      , network >= 2.6
                      , filepath

@@ -6,9 +6,8 @@
 
 module Auth.Service (runAuthService) where
 
-import           Utils.Data.Auth
-import           Authentication.API (AuthAPI, IPAddr, authAPI)
 import           Auth.Client                 (disseminateToken, notifyNewFS)
+import           Authentication.API          (AuthAPI, IPAddr, authAPI)
 import qualified Control.Concurrent.STM      as Stm
 import qualified Control.Concurrent.STM.TVar as TVar
 import           Control.Monad.Reader
@@ -16,17 +15,19 @@ import           Crypto.PasswordStore
 import qualified Data.ByteString.Char8       as BS
 import           Data.List.Split             (splitOn)
 import qualified Database.Redis              as DB
-import           Utils.FSHandler
 import           Network.Socket              (SockAddr)
 import           Network.Wai.Handler.Warp
 import           Servant
 import           Servant.Client
-import           Token                       (Token, InternalToken)
+import           Token                       (InternalToken, Token)
 import           Token.Generate
+import           Utils.Data.Auth
+import           Utils.FSHandler
 
-data ServiceInfo = Info { fileServers :: TVar.TVar [(String,Int)] -- list of file servers registered
-                        , dirServer  :: TVar.TVar (String,Int)
-                        , redisCon    :: DB.Connection
+data ServiceInfo = Info { fileServers   :: TVar.TVar [(String,Int)] -- list of file servers registered
+                        , dirServer     :: TVar.TVar (String,Int)
+                        , transServer   :: TVar.TVar (String,Int)
+                        , redisCon      :: DB.Connection
                         , internalToken :: String
                         }
 
@@ -44,15 +45,16 @@ server = serveToken
 -- | notify all registered services of the new valid token
 serveToken :: SockAddr -> Auth -> AuthM (Token, (IPAddr, Int))
 serveToken ip (Auth a b) = do
-    Info{redisCon=c, dirServer=d, fileServers=f} <- ask
+    Info{redisCon=c, dirServer=d, fileServers=f, transServer=t} <- ask
     authenticated <- liftIO $ authenticate c a b
     if authenticated
       then liftIO $ do
-        t  <- genToken (show ip)
+        tok  <- genToken (show ip)
         ds <- TVar.readTVarIO d
         fs <- TVar.readTVarIO f
-        disseminateToken t (ds:fs) --notify all services of token
-        return (t, ds)
+        ts <- TVar.readTVarIO t
+        disseminateToken tok (ts:ds:fs) --notify all services of token
+        return (tok, ds)
       else throwError err403 {errBody = "Authentication Failure"}
 
 -- | record the new directory service
@@ -71,7 +73,7 @@ newDir addr (Just port) = do
 newFS :: SockAddr -> Maybe Int-> AuthM (InternalToken, [(IPAddr, Int)])
 newFS ip Nothing = throwError err417{errBody = "Missing Service Port"}
 newFS ip (Just port) = do
-    Info{fileServers=f, dirServer=d, internalToken=tok} <- ask
+    Info{fileServers=f, dirServer=d, internalToken=tok, transServer=t} <- ask
     liftIO $ do
         fs <- TVar.readTVarIO f
         ds <- TVar.readTVarIO d
@@ -84,9 +86,10 @@ newFS ip (Just port) = do
 newTrans :: SockAddr -> Maybe Int -> AuthM (InternalToken, (IPAddr, Int))
 newTrans ip Nothing = throwError err417{errBody = "Missing Service Port"}
 newTrans ip (Just port) = do
-    Info{fileServers=f, dirServer=d, internalToken=tok} <- ask
+    Info{fileServers=f, dirServer=d, internalToken=tok, transServer=ts} <- ask
     liftIO $ do
         ds <- TVar.readTVarIO d
+        Stm.atomically $ TVar.writeTVar ts (head $ splitOn ":" $ show ip,port)
         return (tok, ds)
 
 -- lookup the user in the database
@@ -107,9 +110,14 @@ runAuthService :: IO ()
 runAuthService = do
     fs <- TVar.newTVarIO []
     ds <- TVar.newTVarIO ("",-1)
+    ts <- TVar.newTVarIO ("",-1)
     conn <- DB.connect DB.defaultConnectInfo
     internalTok <- genInternalToken
-    run 8080 $ app (Info {fileServers=fs, dirServer=ds, redisCon=conn, internalToken=internalTok})
+    run 8080 $ app (Info {fileServers=fs,
+                          dirServer=ds,
+                          redisCon=conn,
+                          internalToken=internalTok,
+                          transServer=ts})
 
 readerServer :: ServiceInfo -> Server AuthAPI
 readerServer inf = enter (readerToHandler inf) server

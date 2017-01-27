@@ -1,34 +1,48 @@
-{-# LANGUAGE DeriveAnyClass    #-}
-{-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeFamilies      #-}
-{-# LANGUAGE TypeOperators     #-}
+module Dir (getF, newFile , move, listDir, makeRelative) where
 
-module Dir (getF, toFile, openFNew, move, listDir) where
-
-import           Data.Foldable    (forM_)
-import           System.Directory as Dir
-import           System.FilePath  ((</>))
-import qualified System.IO        as IO
-import qualified System.IO.Strict as S.IO
+import           Data.Foldable      (forM_)
+import           Data.Random
+import           Data.Random.Extras (sample)
+import           Data.Random.RVar
+import           System.Directory   as Dir
+import           System.FilePath    ((</>))
+import qualified System.IO          as IO
+import qualified System.IO.Strict   as S.IO
 import           Utils.Data.File
+import Control.Exception
 
--- write a file location to a file in our 'shadow' filesystem
-toFile :: FileHandle -> IO ()
-toFile f@(FileHandle p ip) = appendFile p $ show f
+-- | In order to ensure that the core of the host file system is not
+-- | effected by the 'shadow file system'. we prepend a '.' to the filepath.
+-- | making the request relative to the directory that this service
+-- | is ran from.
+makeRelative :: FilePath -> FilePath
+makeRelative = ('.':)
 
--- returns location of a remote file from our 'shadow' filesystem
--- and moves file just served to end of queue for round robin load balancing
-getF :: FilePath -> IO FileHandle
+-- | Returns location of a remote file from our 'shadow' filesystem
+-- | and moves file just served to end of queue for round robin load balancing
+getF :: FilePath -> IO (Maybe FileHandle)
 getF path = do
-    f <- S.IO.readFile path
-    let (x:xs) = read f :: [FileHandle]
-    writeFile path $ show (xs ++ [x])
-    return x
+    f <- try (S.IO.readFile path) :: IO (Either IOError String)
+    case f of
+      (Left _ )       -> return Nothing
+      (Right content) -> do
+          let (x:xs) = read content :: [FileHandle]
+          writeFile path $ show (xs ++ [x])
+          return $ Just x
 
--- | open a new file in our 'shadow' fileSystem for writing
-openFNew :: FilePath -> [FileHandle] -> IO FileHandle
-openFNew path (f:fs) = writeFile path (show $ fs++[f]) >> return f
+newFile :: FilePath -> [(String,Int)] -> IO FileHandle
+newFile path servers = do
+    fs <- replicationCandidates servers -- pick the servers that the file should be replicated on
+    let handles = genFileHandles path fs
+        shadowPath = makeRelative path
+    writeFile shadowPath (show handles)
+    return $ head handles
+
+replicationCandidates :: [(String,Int)] -> IO [(String,Int)]
+replicationCandidates servers = runRVar (Data.Random.Extras.sample 2 servers) StdRandom
+
+genFileHandles :: FilePath -> [(String,Int)] -> [FileHandle]
+genFileHandles path = map (\addr -> FileHandle path addr)
 
 -- | List the contents of a directory.
 -- | Returns: Just [FilePath] if given path is a directory
@@ -37,7 +51,7 @@ listDir :: FilePath -> IO (Maybe [FilePath])
 listDir path = do
     x <- doesDirectoryExist path
     case x of
-      True -> fmap Just (listDirectory path)
+      True  -> fmap Just (listDirectory path)
       False -> return Nothing
 
 -- | move a file or a directory
@@ -57,7 +71,7 @@ moveDir (src, dest) = do
     createDirectoryIfMissing True dest -- create destination if not exists
     srcFiles <- listDirectory src      -- get src conents
     forM_ srcFiles $ \name -> do
-        let srcPath = src </> name
+        let srcPath  =  src </> name
         let destPath = dest </> name
         move (srcPath,destPath)
     removeDirectoryRecursive src       -- after move is done, remove old directory
