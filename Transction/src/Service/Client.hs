@@ -7,6 +7,7 @@ import Utils.Data.File
 import           Network.HTTP.Client (Manager, defaultManagerSettings,
                                       newManager)
 import Servant.API
+import Token (InternalToken)
 
 -- | Pattern match away the automatically generated Servant-Client functions
 -- | for interacting with the Directory API
@@ -18,27 +19,27 @@ query a b = b a
 
 -- | attemp to open a file (Resolve a file to a fileserver)
 -- | return Nothing if error or file request is malformed
-openFile :: (String,Int) -> FileRequest -> IO (Maybe FileHandle)
-openFile dest param = do
-    res <- runQuery dest param open
+openFile :: (String,Int) -> FileRequest -> InternalToken -> IO (Maybe FileHandle)
+openFile dest param tok = do
+    res <- runQuery dest param (open (Just tok))
     return $ case res of
       Left err -> Nothing
       Right x  -> x
 
 -- | list the contents of a filepath
 -- | returns Nothing if path is invalid (not a directory or doesnt exist)
-listDir :: (String,Int) -> FilePath -> IO (Maybe [FilePath])
-listDir dest param = do
-    res <- runQuery dest (Just param) ls
+listDir :: (String,Int) -> FilePath -> InternalToken -> IO (Maybe [FilePath])
+listDir dest param tok = do
+    res <- runQuery dest (Just param) (ls (Just tok))
     return $ case res of
       Left err -> Nothing
       Right x  -> x
 
 -- | Move a file/folder in the directory server
 -- | returns nothing
-move :: (String,Int) -> (FilePath,FilePath) -> IO ()
-move dest param = do
-    res <- runQuery dest param mv
+move :: (String,Int) -> (FilePath,FilePath) -> InternalToken -> IO ()
+move dest param tok = do
+    res <- runQuery dest param (mv (Just tok))
     case res of
       Left err -> print err
       Right x -> return x

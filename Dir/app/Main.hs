@@ -1,8 +1,7 @@
 module Main where
 
-import           Authentication.API  (AuthAPI, authAPI)
+import           Authentication.API  (authAPI)
 import           Data.List.Split     (splitOn)
-import           Data.Proxy
 import           Dir.Service         (startApp)
 import           Network.HTTP.Client (Manager, defaultManagerSettings,
                                       newManager)

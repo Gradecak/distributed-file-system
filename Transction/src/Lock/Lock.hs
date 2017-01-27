@@ -1,5 +1,5 @@
 module Lock (Lock(..), LockTable, setLockStatus,
-             checkLockStatus, set, free) where
+             checkLockStatus, set, free, newTable) where
 
 import qualified Data.Map as Map
 import  Utils.Data.File
@@ -35,3 +35,6 @@ set (Request p _    ) table = setLockStatus p Locked table
 -- | Change the status of a file to 'Unlocked'
 free :: FilePath -> LockTable -> LockTable
 free path t = setLockStatus path Unlocked t
+
+newTable :: LockTable
+newTable = Map.empty
