@@ -1,20 +1,22 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Dir (getF, newFile , move, listDir, makeRelative) where
 
+import           Control.Exception
 import           Data.Foldable      (forM_)
 import           Data.Random
 import           Data.Random.Extras (sample)
 import           Data.Random.RVar
+import           Dir.Client
 import           System.Directory   as Dir
 import           System.FilePath    ((</>))
 import qualified System.IO          as IO
 import qualified System.IO.Strict   as S.IO
+import           Token              (InternalToken)
 import           Utils.Data.File
-import Control.Exception
 
--- | In order to ensure that the core of the host file system is not
--- | effected by the 'shadow file system'. we prepend a '.' to the filepath.
--- | making the request relative to the directory that this service
--- | is ran from.
+-- | In order to ensure that the core of the host file system is not effected by
+-- the 'shadow file system'. we prepend a '.' to the filepath. making the
+-- request relative to the directory that this service is ran from.
 makeRelative :: FilePath -> FilePath
 makeRelative = ('.':)
 
@@ -30,13 +32,22 @@ getF path = do
           writeFile path $ show (xs ++ [x])
           return $ Just x
 
-newFile :: FilePath -> [(String,Int)] -> IO FileHandle
-newFile path servers = do
+newFile :: FilePath -> [(String,Int)] -> InternalToken -> IO FileHandle
+newFile path servers tok= do
     fs <- replicationCandidates servers -- pick the servers that the file should be replicated on
     let handles = genFileHandles path fs
         shadowPath = makeRelative path
+    allocateFileSpace path fs tok       -- instruct the chosen servers to allocate space
     writeFile shadowPath (show handles)
     return $ head handles
+
+-- | Sends a create file request to the fileservers instructing them to allocate
+-- space for the incoming file, by doing this it allows the directory server to
+-- control where the files are replicated.
+allocateFileSpace :: FilePath -> [(String,Int)] -> InternalToken -> IO ()
+allocateFileSpace path dest tok = do
+    let file = File{name="temp", version=0, filepath=path, bytes="asdf"}
+    createFile dest file tok
 
 replicationCandidates :: [(String,Int)] -> IO [(String,Int)]
 replicationCandidates servers = runRVar (Data.Random.Extras.sample 2 servers) StdRandom

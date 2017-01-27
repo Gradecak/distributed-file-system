@@ -1,27 +1,26 @@
-module Main where
+module Main (main) where
 
-import           Authentication.API  (authAPI)
+import           Authentication.API  (authAPI, dirEndPt)
 import           Data.List.Split     (splitOn)
 import           Dir.Service         (startApp)
 import           Network.HTTP.Client (Manager, defaultManagerSettings,
                                       newManager)
-import           Servant.API
 import           Servant.Client
 import           System.Environment  (getArgs)
-import Token (InternalToken)
+import           Token               (InternalToken)
 
-_ :<|> dir :<|> _ :<|> _ = client authAPI
-
+-- | endpoint to query
 query :: Int -> ClientM (InternalToken, [(String, Int)])
-query i = dir (Just i)
+query i = dirEndPt (Just i)
 
+-- | make the query and return result
 registerWithAuth :: Int -> (String,Int) -> IO (Maybe (InternalToken, [(String, Int)]))
 registerWithAuth srcPort (addr,port) = do
     manager <- newManager defaultManagerSettings
-    res <- runClientM (query srcPort) (ClientEnv manager (BaseUrl Http addr port ""))
+    res     <- runClientM (query srcPort) (ClientEnv manager (BaseUrl Http addr port ""))
     return $ case res of
       Left err -> Nothing
-      Right x -> Just x
+      Right x  -> Just x
 
 main :: IO ()
 main = do

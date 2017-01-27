@@ -18,9 +18,11 @@ library
                      , src/Dir
   exposed-modules:     Dir
                      , Dir.Service
+                     , Dir.Client
   build-depends:       base >= 4.7 && < 5
                      , servant >= 0.9.1.1
                      , servant-server >= 0.9.1.1
+                     , servant-client >= 0.9.1.1
                      , Utils
                      , API
                      , bytestring
@@ -31,6 +33,7 @@ library
                      , random-extras >= 0.19
                      , random-fu
                      , Token
+                     , http-client >= 0.4
                      , network >= 2.6
                      , filepath
                      , unordered-containers

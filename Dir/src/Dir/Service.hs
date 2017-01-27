@@ -1,11 +1,6 @@
-{-# LANGUAGE DataKinds         #-}
-{-# LANGUAGE DeriveAnyClass    #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RankNTypes        #-}
-{-# LANGUAGE TypeFamilies      #-}
-{-# LANGUAGE TypeOperators     #-}
 
-module Dir.Service where
+module Dir.Service (startApp) where
 
 import qualified Control.Concurrent.STM      as Stm
 import qualified Control.Concurrent.STM.TVar as TVar
@@ -13,14 +8,15 @@ import           Control.Monad.Except
 import           Control.Monad.Reader
 import           Database.Redis
 import           Dir
-import           Directory.API
+import           Directory.API               (DirAPI, dirAPI)
 import qualified Network.Socket              as Net (SockAddr)
 import           Network.Wai.Handler.Warp
 import           Servant
 import qualified System.Directory            as Dir
 import           Token                       (InternalToken, Token)
 import qualified Token.Store                 as Tok
-import           Utils.Data.File             (FileHandle (..), FileRequest (..), FileMode(..))
+import           Utils.Data.File             (FileHandle (..), FileMode (..),
+                                              FileRequest (..))
 import           Utils.FSHandler
 import           Utils.Session
 
@@ -82,14 +78,14 @@ openF :: Maybe String -> FileRequest -> DirM (Maybe FileHandle)
 openF tok (Request path Read) = internalAuth tok >> (liftIO $ getF $ makeRelative path)
 openF tok (Request path _) = do
     internalAuth tok
-    Info{fileServers=f} <- ask
+    Info{fileServers=f, internalToken=t} <- ask
     liftIO $ do
         file <- getF (makeRelative path) -- attempt to read file
         case file of
           Just f  -> return file         -- if file exists return file
           Nothing -> do                  -- else open new file
               fs <- TVar.readTVarIO f
-              fmap Just (newFile path fs)
+              fmap Just (newFile path fs t)
 
 registerFileServer :: Maybe String -> (String, Int) -> DirM ()
 registerFileServer tok ip = do
