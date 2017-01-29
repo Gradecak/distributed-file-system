@@ -10,27 +10,28 @@ import           Servant.Client
 import           Token
 import           Utils.Data.Auth
 
-
 type IPAddr = String -- a nice little alias
 
-type AuthAPI =  "auth"  :> RemoteHost
-                        :> ReqBody '[JSON] Auth
-                        :> Post '[JSON] (Token, (IPAddr, Int))
+type AuthAPI =  "auth"     :> RemoteHost
+                           :> ReqBody '[JSON] Auth
+                           :> Post '[JSON] (Token, (IPAddr, Int))
 
-           :<|> "dir"   :> RemoteHost
-                        :> QueryParam "port" Int
-                        :> Post '[JSON] (InternalToken, [(IPAddr, Int)])
+           :<|> "register" :> ReqBody '[JSON] Auth
+                           :> Post '[JSON] ()
 
-           :<|> "fsys"  :> RemoteHost
-                        :> QueryParam "port" Int
-                        :> Post '[JSON] (InternalToken, [(IPAddr, Int)])
+           :<|> "dir"      :> RemoteHost
+                           :> QueryParam "port" Int
+                           :> Post '[JSON] (InternalToken, [(IPAddr, Int)])
 
-           :<|> "trans" :> RemoteHost
-                        :> QueryParam "port" Int
-                        :> Post '[JSON] (InternalToken, (IPAddr, Int))
+           :<|> "fsys"     :> RemoteHost
+                           :> QueryParam "port" Int
+                           :> Post '[JSON] (InternalToken, [(IPAddr, Int)])
+
+           :<|> "trans"    :> RemoteHost
+                           :> QueryParam "port" Int
+                           :> Post '[JSON] (InternalToken, (IPAddr, Int))
 
 authAPI :: Proxy AuthAPI
 authAPI = Proxy
-
 
 authEndPt :<|> dirEndPt :<|> fsysEndPt :<|> transEndPt = client authAPI

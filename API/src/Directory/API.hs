@@ -2,14 +2,15 @@
 {-# LANGUAGE TypeOperators #-}
 
 module Directory.API (DirAPI, dirAPI, lsEndPt, _lsEndPt,
-                      openEndPt, mvEndPt, registerEndPt) where
+                      _openEndPt, _mvEndPt, _registerEndPt,
+                      _rmEndPt) where
 
 import           Data.Proxy
 import           Servant.API
 import           Servant.Client
+import           Shared.API
 import           Utils.Data.File    (FileHandle, FileRequest)
-import           Utils.InternalAuth              --for protecting internal endpts
-import           Utils.Session      (TokenEndPt) --for protecting public endpts
+import           Utils.InternalAuth
 
 
 -- | Endpoints for interacting with the directory server
@@ -20,8 +21,8 @@ import           Utils.Session      (TokenEndPt) --for protecting public endpts
 -- | /ls        - list the content of a given directory
 -- |            - @param : "path" - path of the directory to list
 -- |            - @return: list of filepaths contained in the listed dir
-type DirAPI = TokenEndPt
-         :<|> "list"     :> AuthProtect "cookie-auth"
+type DirAPI =
+              "list"     :> AuthProtect "cookie-auth"
                          :> QueryParam "path" FilePath
                          :> Get '[JSON] ([FilePath])
 
@@ -37,11 +38,15 @@ type DirAPI = TokenEndPt
                          :> ReqBody '[JSON] (FilePath,FilePath)
                          :> Post '[JSON] ()
 
-         :<|> "register" :> ProtectInternal
-                         :> ReqBody '[JSON] (String,Int)
+         :<|> "rm"       :> ProtectInternal
+                         :> ReqBody '[JSON] FilePath
                          :> Post '[JSON] ()
+
+         :<|>            RegisterFileServer
+
+         :<|>            TokenEndPt
 
 dirAPI :: Proxy DirAPI
 dirAPI = Proxy
 
-_ :<|> lsEndPt :<|> _lsEndPt :<|>openEndPt :<|> mvEndPt :<|> registerEndPt = client dirAPI
+lsEndPt :<|> _lsEndPt :<|> _openEndPt :<|> _mvEndPt :<|> _rmEndPt:<|> _registerEndPt :<|> _ = client dirAPI

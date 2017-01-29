@@ -19,10 +19,12 @@ library
                      , src/Directory
                      , src/File
                      , src/Transaction
+                     , src/Shared
   exposed-modules:     Authentication.API
                      , Directory.API
                      , Transaction.API
                      , File.API
+                     , Shared.API
   build-depends:       base >= 4.7 && < 5
                      , servant >= 0.9.1.1
                      , servant-client >= 0.9.1.1

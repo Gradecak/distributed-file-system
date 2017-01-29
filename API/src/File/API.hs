@@ -1,10 +1,9 @@
 {-# LANGUAGE DataKinds         #-}
 {-# LANGUAGE TypeOperators     #-}
-
 module File.API (FileAPI, fileAPI, getEndPt, putEndPt,
-                gossipEndPt, createFileEndPt) where
+                gossipEndPt, createFileEndPt, deleteEndPt) where
 
-import Utils.Session
+import Shared.API (TokenEndPt, RegisterFileServer)
 import Data.Proxy
 import Utils.Data.File
 import Utils.InternalAuth (ProtectInternal)
@@ -12,9 +11,9 @@ import Servant.API
 import Servant.Client
 
 -- | Endpoints for interacting with the fileserver
-type FileAPI = TokenEndPt --endpoint to listen for new authorized clients
+type FileAPI =
     -- public (client accessible) endpoints
-   :<|> "get"    :> AuthProtect "cookie-auth"
+        "get"    :> AuthProtect "cookie-auth"
                  :> ReqBody '[JSON] FilePath
                  :> Post '[JSON] (Maybe File)
 
@@ -28,10 +27,18 @@ type FileAPI = TokenEndPt --endpoint to listen for new authorized clients
                  :> Post '[JSON] ()
 
    :<|> "create" :> ProtectInternal
-                 :> ReqBody '[JSON] File
+                 :> ReqBody '[JSON] FileID
                  :> Post '[JSON] ()
+
+   :<|> "delete" :> ProtectInternal
+                 :> ReqBody '[JSON] FileID
+                 :> Post '[JSON] ()
+
+   :<|> TokenEndPt
+
+   :<|> RegisterFileServer
 
 fileAPI :: Proxy FileAPI
 fileAPI = Proxy
 
-_ :<|> getEndPt :<|> putEndPt :<|> gossipEndPt :<|> createFileEndPt = client fileAPI
+getEndPt :<|> putEndPt :<|> gossipEndPt :<|> createFileEndPt :<|> deleteEndPt :<|> _ :<|> _ = client fileAPI

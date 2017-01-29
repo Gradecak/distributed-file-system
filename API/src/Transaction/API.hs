@@ -1,19 +1,18 @@
-{-# LANGUAGE DataKinds         #-}
-{-# LANGUAGE TypeOperators     #-}
+{-# LANGUAGE DataKinds     #-}
+{-# LANGUAGE TypeOperators #-}
 
 module Transaction.API (TransAPI, transAPI, openEndPt,
                        closeEndPt, mvEndPt, rmEndPt) where
 
-import Utils.Session
-import Data.Proxy
-import Utils.InternalAuth
-import Utils.Data.File (FileRequest, FileHandle)
-import Servant.API
-import Servant.Client
+import           Data.Proxy
+import           Servant.API
+import           Servant.Client
+import           Shared.API         (TokenEndPt)
+import           Utils.Data.File    (FileHandle, FileRequest)
+import           Utils.InternalAuth
 
-type TransAPI = TokenEndPt
-
-    :<|> "open" :> AuthProtect "cookie-auth"            -- /open (requires authentication)
+type TransAPI =
+         "open" :> AuthProtect "cookie-auth"            -- /open (requires authentication)
                 :> ReqBody '[JSON] FileRequest          -- @param FileRequest
                 :> Post '[JSON] (Maybe FileHandle)      -- @return FileHandle
 
@@ -29,7 +28,9 @@ type TransAPI = TokenEndPt
                 :> ReqBody '[JSON] FilePath             -- @param FilePath
                 :> Post '[JSON] ()                      -- @return Nothing
 
+    :<|>        TokenEndPt
+
 transAPI :: Proxy TransAPI
 transAPI = Proxy
 
-_ :<|> openEndPt :<|> closeEndPt :<|> mvEndPt :<|> rmEndPt = client transAPI
+openEndPt :<|> closeEndPt :<|> mvEndPt :<|> rmEndPt :<|> _ = client transAPI
