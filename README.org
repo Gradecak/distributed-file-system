@@ -1,5 +1,17 @@
 * Distributed FileSystem (DFS)
 
+* Table of Contents                                                     :TOC:
+ - [[#distributed-filesystem-dfs][Distributed FileSystem (DFS)]]
+   - [[#dfs-services][DFS Services:]]
+     - [[#authentication-service][Authentication Service:]]
+       - [[#service-overview][Service Overview:]]
+       - [[#message-encryption][Message Encryption:]]
+       - [[#user-authentication][User Authentication:]]
+       - [[#internal-authentication][Internal Authentication]]
+     - [[#directory-service][Directory Service:]]
+       - [[#service-overview-1][Service Overview:]]
+       - [[#filepath-to-fileserver-mapping][FilePath to FileServer mapping]]
+
 ** DFS Services:
    - Authentication Service
    - Directory Service
