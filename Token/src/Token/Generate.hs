@@ -1,4 +1,4 @@
-module Token.Generate (genToken, genInternalToken) where
+module Token.Generate (genToken, genInternalToken, genFileID) where
 
 import           Token
 import           Data.UUID     (toString)
@@ -13,3 +13,6 @@ genToken srcIP = do
 -- | generate a new internal token (to be used for inter service communication)
 genInternalToken :: IO InternalToken
 genInternalToken = fmap toString nextRandom
+
+genFileID :: IO String
+genFileID = genInternalToken

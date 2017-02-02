@@ -3,7 +3,8 @@
 {-# LANGUAGE TypeFamilies      #-}
 {-# LANGUAGE TypeOperators     #-}
 
-module Utils.Session (genAuthServerContext, authHandler, authenticate, TokenEndPt, _authorize, tokenAPI) where
+module Utils.Session (genAuthServerContext, authHandler,
+                      authenticate, _authorize) where
 
 import           Control.Monad                    (unless)
 import           Control.Monad.IO.Class           (liftIO)
@@ -16,13 +17,6 @@ import           Token
 import qualified Token.Store                      as T (insert, lookupB)
 
 type instance AuthServerData (AuthProtect "cookie-auth") = ()
-type instance AuthServerData (AuthProtect "internal-auth") = ()
-
--- | an endpoint for recieving tokens
-type TokenEndPt =  "authorize" :> ReqBody '[JSON] Token :> Post '[JSON] NoContent
-
-tokenAPI :: Proxy TokenEndPt
-tokenAPI = Proxy
 
 genAuthServerContext :: Connection -> Context (AuthHandler Request () ': '[])
 genAuthServerContext con = authHandler con  :. EmptyContext

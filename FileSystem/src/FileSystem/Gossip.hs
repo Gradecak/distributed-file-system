@@ -44,12 +44,10 @@ inCache path table = do
 
 -- | a comparison of file versions.
 staleFile :: File -> File -> Bool
-staleFile f1 f2 = if (version f1) > (version f2)
-                  then True
-                  else False
+staleFile f1 f2 = (version f1) > (version f2)
 
 cacheFile :: File -> GossipTable -> IO ()
-cacheFile file table = insert table (filepath file) Propagated
+cacheFile file table = insert table (fileId file) Propagated
 
 disseminateFile :: File -> [(String,Int)] -> InternalToken -> IO ()
 disseminateFile file dest tok = do
@@ -60,7 +58,7 @@ disseminateFile file dest tok = do
 
 startGossip :: File -> GossipTable -> [(String,Int)] -> InternalToken -> IO ()
 startGossip file table endpts tok = do
-    cached <- inCache (filepath file) table
+    cached <- inCache (fileId file) table
     if cached
        then return ()
        else do

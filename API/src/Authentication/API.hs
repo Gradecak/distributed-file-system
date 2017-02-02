@@ -1,8 +1,8 @@
 {-# LANGUAGE DataKinds     #-}
 {-# LANGUAGE TypeOperators #-}
-module Authentication.API (AuthAPI,IPAddr,authAPI
+module Authentication.API (AuthAPI,Addr,authAPI
                           , authEndPt, dirEndPt, fsysEndPt,
-                            transEndPt) where
+                            transEndPt, registerEndPt) where
 
 import           Data.Proxy
 import           Servant.API
@@ -10,28 +10,28 @@ import           Servant.Client
 import           Token
 import           Utils.Data.Auth
 
-type IPAddr = String -- a nice little alias
+type Addr = (String,Int) -- a nice little alias
 
 type AuthAPI =  "auth"     :> RemoteHost
                            :> ReqBody '[JSON] Auth
-                           :> Post '[JSON] (Token, (IPAddr, Int))
+                           :> Post '[JSON] (Token, (Addr,Addr))
 
            :<|> "register" :> ReqBody '[JSON] Auth
                            :> Post '[JSON] ()
 
            :<|> "dir"      :> RemoteHost
                            :> QueryParam "port" Int
-                           :> Post '[JSON] (InternalToken, [(IPAddr, Int)])
+                           :> Post '[JSON] (InternalToken, [Addr])
 
            :<|> "fsys"     :> RemoteHost
                            :> QueryParam "port" Int
-                           :> Post '[JSON] (InternalToken, [(IPAddr, Int)])
+                           :> Post '[JSON] (InternalToken, [Addr])
 
            :<|> "trans"    :> RemoteHost
                            :> QueryParam "port" Int
-                           :> Post '[JSON] (InternalToken, (IPAddr, Int))
+                           :> Post '[JSON] (InternalToken, Addr)
 
 authAPI :: Proxy AuthAPI
 authAPI = Proxy
 
-authEndPt :<|> dirEndPt :<|> fsysEndPt :<|> transEndPt = client authAPI
+authEndPt :<|> registerEndPt :<|>dirEndPt :<|> fsysEndPt :<|> transEndPt = client authAPI

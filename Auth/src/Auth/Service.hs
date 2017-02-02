@@ -1,9 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
-
 module Auth.Service (runAuthService, HandlerData(..), AuthM) where
 
 import           Auth.Internal
-import           Authentication.API          (AuthAPI, IPAddr, authAPI)
+import           Authentication.API          (AuthAPI, Addr, authAPI)
 import qualified Control.Concurrent.STM      as Stm
 import qualified Control.Concurrent.STM.TVar as TVar
 import qualified Data.ByteString.Char8       as BS
@@ -24,9 +23,10 @@ server =      serveToken
          :<|> newFS
          :<|> newTrans
 
--- | authenticate a user with the system, generate a token and
--- | notify all registered services of the new valid token
-serveToken :: SockAddr -> Auth -> AuthM (Token, (IPAddr, Int))
+-- | authenticate a user with the system, generate a token and notify all
+-- registered services of the new valid token returns the newly generated token
+-- and touple of directory and transaction services (Dir,Trans)
+serveToken :: SockAddr -> Auth -> AuthM (Token,(Addr,Addr))
 serveToken ip (Auth a b) = do
     Info{redisCon=c, dirServer=d, transServer=t} <- ask
     authenticated <- liftIO $ authenticate c a b
@@ -36,7 +36,7 @@ serveToken ip (Auth a b) = do
         liftIO $ do
             ds <- TVar.readTVarIO d
             ts <- TVar.readTVarIO t
-            return (clientToken, ds)
+            return (clientToken, (ds,ts))
       else throwError err401 {errBody = "Authentication Failure"}
 
 
@@ -49,7 +49,7 @@ register user = do
 -- | record the new directory service
 -- | Issue the new direcotry service with a session token
 -- | and a list of the current file servers
-newDir  :: SockAddr -> Maybe Int -> AuthM (InternalToken, [(IPAddr, Int)])
+newDir  :: SockAddr -> Maybe Int -> AuthM (InternalToken, [Addr])
 newDir _ Nothing = throwError err417{errBody = "Missing Service Port"}
 newDir addr (Just port) = do
     Info{dirServer=d, internalToken=tok, fileServers=tfs} <- ask
@@ -59,13 +59,13 @@ newDir addr (Just port) = do
 
 -- | add a new FileServer to the list of Servers and notify all other
 -- | services in the system of the new service
-newFS :: SockAddr -> Maybe Int-> AuthM (InternalToken, [(IPAddr, Int)])
+newFS :: SockAddr -> Maybe Int-> AuthM (InternalToken, [Addr])
 newFS ip Nothing     = throwError err417{errBody = "Missing Service Port"}
 newFS ip (Just port) = addNewFS (head $ splitOn ":" $ show ip, port)
 
 -- | serve the transaction server attempting to connect to the system with
 -- | the internal session token and the address (Ip, port) of the directory service
-newTrans :: SockAddr -> Maybe Int -> AuthM (InternalToken, (IPAddr, Int))
+newTrans :: SockAddr -> Maybe Int -> AuthM (InternalToken, Addr)
 newTrans ip Nothing = throwError err417{errBody = "Missing Service Port"}
 newTrans ip (Just port) = do
     Info{fileServers=f, dirServer=d, internalToken=tok, transServer=ts} <- ask

@@ -1,14 +1,16 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module FileSystem where
+module FileSystem ( deleteFile, insertFile, updateFile
+                  , SqlCommand, selectFile, file
+                  , newFile) where
 
-import Utils.Data.File
-import Database.MySQL.Simple
-import Database.MySQL.Simple.QueryResults
-import Database.MySQL.Simple.Result
-import Database.MySQL.Simple.QueryParams
-import Data.Int
-import qualified Data.ByteString as BS
+import qualified Data.ByteString                    as BS
+import           Data.Int
+import           Database.MySQL.Simple
+import           Database.MySQL.Simple.QueryParams
+import           Database.MySQL.Simple.QueryResults
+import           Database.MySQL.Simple.Result
+import           Utils.Data.File
 
 -- | making File an instance of QueryResult will allow us to query our
 -- | database tables directly to our Haskell File datatype
@@ -48,13 +50,23 @@ sqlCmd_ q conn = execute_ conn q
 
 -- | insert file into our table
 insertFile :: File -> SqlCommand
-insertFile (File name version path bytes) = sqlCmd "insert into files (name, version, filepath, bytes) values (?, ?, ?, ?)" (name,version,path,bytes)
+insertFile (File name version fileId bytes) = sqlCmd "insert into files (name,version,fileId,bytes) values (?,?,?,?)" (name,version,fileId,bytes)
+
+newFile :: FileID -> SqlCommand
+newFile p = sqlCmd "insert into files (name,version,fileId,bytes) values ('',0,?,'')" [p]
+
+deleteFile :: FileID -> SqlCommand
+deleteFile p = sqlCmd "DELETE FROM files WHERE files.fileId=?" [p]
+
+-- | update file in the database
+updateFile :: File -> SqlCommand
+updateFile (File name version fileId bytes) = sqlCmd "update files set files.name=?, files.version=files.version+1, files.bytes=? where files.fileId=?" (name,bytes,fileId)
 
 selectAllFiles :: SqlQuery [File]
-selectAllFiles = sqlQuery_ "select name, version, filepath, bytes from files"
+selectAllFiles = sqlQuery_ "select name, version, fileid, bytes from files"
 
 selectFile :: [String] -> SqlQuery [File]
-selectFile p = sqlQuery "select name, version, filepath, bytes from files where filepath=?" p
+selectFile p = sqlQuery "select name, version, fileid, bytes from files where fileid=?" p
 
-file :: (String,Int, String, BS.ByteString) -> File
-file (name,version, path, bytes) = File name version path bytes
+file :: (String,Int, FileID, BS.ByteString) -> File
+file (name,version, id, bytes) = File name version id bytes

@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Service (startApp) where
 
 import qualified Control.Concurrent.STM      as Stm
@@ -7,6 +8,8 @@ import           Control.Monad.Reader
 import           Data.Maybe
 import qualified Database.Redis              as Redis
 import           Lock
+import           Network.Wai.Handler.Warp
+import           Servant
 import           Servant.API
 import           Servant.Server
 import           Service.Client
@@ -14,9 +17,8 @@ import           Token                       (InternalToken, Token)
 import           Token.Store                 (insert)
 import           Transaction.API
 import           Utils.Data.File
-import           Utils.FSHandler
+import           Utils.ReaderHandler
 import           Utils.Session
-import Network.Wai.Handler.Warp
 
 -- | The data that our handlers will need access to
 data HandlerData = Info { locks         :: TVar.TVar LockTable
@@ -25,40 +27,57 @@ data HandlerData = Info { locks         :: TVar.TVar LockTable
                         , redisConn     :: Redis.Connection
                         }
 
-type TransM = FSHandler HandlerData
+type TransM = ReaderHandler HandlerData
 
 servant :: ServerT TransAPI TransM
-servant =  addAuthorized
-            :<|> open
+servant =        open
             :<|> close
             :<|> Service.move
             :<|> rm
+            :<|> addAuthorized
+
+
+internalAuth :: Maybe InternalToken -> TransM ()
+internalAuth Nothing = throwError err401 {errBody="Missing service token"}
+internalAuth (Just x) = do
+    Info{internalToken=t} <- ask
+    if x == t
+       then return ()
+       else throwError err401 {errBody="Missing service token"}
 
 -- | Store the recieved 'authorized' token in the local token store
-addAuthorized :: Token -> TransM NoContent
-addAuthorized t = do
+addAuthorized :: (Maybe InternalToken) -> Token -> TransM NoContent
+addAuthorized iTok newTok = do
+    internalAuth iTok
     Info{redisConn=c} <- ask
-    liftIO $ insert t c
+    liftIO $ insert newTok c
     return NoContent
 
 -- | Serve a users request for a file, returning a (Maybe FileHandle)
--- | if the Server cannot resolve request return Nothing
+-- | if the Server cannot resolve request return 404
 -- | if the Server cannot acquire lock return Nothing
 open :: () -> FileRequest -> TransM (Maybe FileHandle)
 open _ r = do
-    Info{dirServer=d, internalToken=tok} <- ask
-    file <- liftIO (openFile d r tok) -- resolve the request to a fileserver
-    case file of
-      Nothing -> return Nothing   -- if the filenname could not be resolved
-      _       ->  do              -- else:
-          x <- aquireFileLock r   -- lock the file
-          return $ case x of
-            True  -> file         -- Lock successful
-            False -> Nothing      -- Lock busy
+    fileHandle <- resolveFile r
+    x          <- aquireFileLock r
+    return $ case x of
+      True  -> Just fileHandle
+      False -> Nothing
 
--- | Attemp to lock a file, return True if succesful False if fail
+-- | Ask the directory server to resolve the fileRequest, if the file is not
+-- found throw http404 else return file
+resolveFile :: FileRequest -> TransM FileHandle
+resolveFile r = do
+    Info{internalToken=tok, dirServer=d} <- ask
+    file <- liftIO $ (openFile d r tok)
+    case file of
+      Nothing -> throwError err404{errBody="File not found"}
+      Just x -> return x
+
+-- | Attemp to lock a file, return True if succesful False if fail. Will only
+-- set file status to locked if the requested mode is Write/ReadWrite.
 aquireFileLock :: FileRequest -> TransM Bool
-aquireFileLock req@(Request path mode) = do
+aquireFileLock req@(Request path _) = do
     Info{locks=l} <- ask
     lockMap <- liftIO $ TVar.readTVarIO l
     let locked = checkLockStatus path lockMap
@@ -74,10 +93,14 @@ close _ path = do
     Info{locks=l} <- ask
     liftIO $ Stm.atomically $ TVar.modifyTVar' l (free path)
 
-
 -- | PLACEHOLDER
 rm :: () -> FilePath -> TransM ()
-rm _ path = return ()
+rm _ path = do
+    Info{dirServer=d, internalToken=t} <- ask
+    lock <- aquireFileLock (Request path Write)
+    if lock
+       then liftIO $ removeFile d path t
+       else throwError err400 {errBody="Resource is Locked"}
 
 -- | Move the location of a file/directory
 move :: () -> (FilePath, FilePath) -> TransM ()

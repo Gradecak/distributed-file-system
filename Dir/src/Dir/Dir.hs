@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Dir (getF, newFile , move, listDir, makeRelative) where
+module Dir (getF, newFile , move, listDir, makeRelative,rmFile) where
 
 import           Control.Exception
 import           Data.Foldable      (forM_)
@@ -12,6 +12,7 @@ import           System.FilePath    ((</>))
 import qualified System.IO          as IO
 import qualified System.IO.Strict   as S.IO
 import           Token              (InternalToken)
+import           Token.Generate     (genFileID)
 import           Utils.Data.File
 
 -- | In order to ensure that the core of the host file system is not effected by
@@ -24,35 +25,55 @@ makeRelative = ('.':)
 -- | and moves file just served to end of queue for round robin load balancing
 getF :: FilePath -> IO (Maybe FileHandle)
 getF path = do
-    f <- try (S.IO.readFile path) :: IO (Either IOError String)
-    case f of
-      (Left _ )       -> return Nothing
-      (Right content) -> do
-          let (x:xs) = read content :: [FileHandle]
-          writeFile path $ show (xs ++ [x])
+    handles <- readHandles path
+    case handles of
+      Nothing -> return Nothing
+      Just (x:xs) -> do
+          writeFile (makeRelative path) $ show (xs ++ [x])
           return $ Just x
+
+-- | reads the [FileHandles] from the provided path, catches IOErrors thrown by
+-- readfile and returns (Just [FleHandle]) if read was successful, otherwise
+-- Nothing
+readHandles :: FilePath -> IO (Maybe [FileHandle])
+readHandles path = do
+    let shadowPath = makeRelative path
+    f <- try (S.IO.readFile shadowPath) :: IO (Either IOError String)
+    return $ case f of
+      (Left _)        -> Nothing
+      (Right content) -> Just (read content)
 
 newFile :: FilePath -> [(String,Int)] -> InternalToken -> IO FileHandle
 newFile path servers tok= do
-    fs <- replicationCandidates servers -- pick the servers that the file should be replicated on
-    let handles = genFileHandles path fs
+    fs     <- replicationCandidates servers
+    fileId <- allocateFileSpace fs tok
+    let handles    = genFileHandles fileId fs
         shadowPath = makeRelative path
-    allocateFileSpace path fs tok       -- instruct the chosen servers to allocate space
     writeFile shadowPath (show handles)
     return $ head handles
 
+rmFile :: FilePath -> InternalToken -> IO ()
+rmFile path tok = do
+    x <- readHandles path
+    case x of
+      Nothing      -> return ()
+      Just handles -> do
+          forM_ handles (\(FileHandle id ip) -> deleteFile ip id tok)
+          removeFile (makeRelative path)
+
 -- | Sends a create file request to the fileservers instructing them to allocate
 -- space for the incoming file, by doing this it allows the directory server to
--- control where the files are replicated.
-allocateFileSpace :: FilePath -> [(String,Int)] -> InternalToken -> IO ()
-allocateFileSpace path dest tok = do
-    let file = File{name="temp", version=0, filepath=path, bytes="asdf"}
-    createFile dest file tok
+-- control where the files are replicated. Returns ID of file created
+allocateFileSpace :: [(String,Int)] -> InternalToken -> IO FileID
+allocateFileSpace dest tok = do
+    id <- genFileID
+    createFile dest id tok
+    return id
 
 replicationCandidates :: [(String,Int)] -> IO [(String,Int)]
 replicationCandidates servers = runRVar (Data.Random.Extras.sample 2 servers) StdRandom
 
-genFileHandles :: FilePath -> [(String,Int)] -> [FileHandle]
+genFileHandles :: FileID -> [(String,Int)] -> [FileHandle]
 genFileHandles path = map (\addr -> FileHandle path addr)
 
 -- | List the contents of a directory.
@@ -60,6 +81,7 @@ genFileHandles path = map (\addr -> FileHandle path addr)
 -- | Returns: Nothing if given path is a file
 listDir :: FilePath -> IO (Maybe [FilePath])
 listDir path = do
+    putStrLn path
     x <- doesDirectoryExist path
     case x of
       True  -> fmap Just (listDirectory path)

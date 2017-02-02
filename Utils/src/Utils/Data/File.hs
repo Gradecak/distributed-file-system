@@ -2,7 +2,9 @@
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Utils.Data.File (File(..), FileHandle(..), FileMode(..), FileRequest(..)) where
+module Utils.Data.File (File(..), FileHandle(..),
+                        FileMode(..), FileRequest(..)
+                       ,FileID) where
 
 import qualified Control.Applicative    as App
 import qualified Control.Monad          as Mon
@@ -14,8 +16,8 @@ import           Data.Text.Encoding     (decodeUtf8, encodeUtf8)
 import           GHC.Generics
 --import qualified System.Directory       as Dir
 
--- | to get around the issue of ByteStrings containing illegal characters
--- | when encoded as Text we will convert the ByteString to Base64 before encoding
+-- | to get around the issue of ByteStrings containing illegal characters when
+--  encoded as Text we will convert the ByteString to Base64 before encoding
 instance FromJSON BS.ByteString where
   parseJSON (String t) = pure $ (either (const "") id . B64.decode . encodeUtf8) t
   parseJSON _ = App.empty
@@ -23,15 +25,23 @@ instance FromJSON BS.ByteString where
 instance ToJSON BS.ByteString where
   toJSON = String . decodeUtf8 . B64.encode
 
--- | File datatype that will facilitate file transfer and version control
-data File = File { name     :: String
-                 , version  :: Int
-                 , filepath :: String
-                 , bytes    :: BS.ByteString
+-- -- | File datatype that will facilitate file transfer and version control
+-- data File = File { name     :: String
+--                  , version  :: Int
+--                  , filepath :: String
+--                  , bytes    :: BS.ByteString
+--                  } deriving (Show, Read, Generic, FromJSON, ToJSON)
+
+type FileID = String
+
+data File = File { name    :: String
+                 , version :: Int
+                 , fileId  :: FileID
+                 , bytes   :: BS.ByteString
                  } deriving (Show, Read, Generic, FromJSON, ToJSON)
 
 -- | Indicates the location of a file on the remote server
-data FileHandle = FileHandle  { path     :: FilePath
+data FileHandle = FileHandle  { fileID   :: String
                               , serverIp :: (String,Int)
                               } deriving (Show, Read, Generic, FromJSON, ToJSON)
 

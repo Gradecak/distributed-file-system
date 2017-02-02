@@ -14,7 +14,7 @@ import Servant.Client
 type FileAPI =
     -- public (client accessible) endpoints
         "get"    :> AuthProtect "cookie-auth"
-                 :> ReqBody '[JSON] FilePath
+                 :> ReqBody '[JSON] FileID
                  :> Post '[JSON] (Maybe File)
 
    :<|> "put"    :> AuthProtect "cookie-auth"

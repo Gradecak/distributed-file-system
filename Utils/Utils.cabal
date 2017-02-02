@@ -18,17 +18,20 @@ library
                      , src/Utils/
                      , src/Utils/Data
   exposed-modules:     Utils.Session
-                     , Utils.FSHandler
-                     , Utils.Data.File
+                     , Utils.ReaderHandler
                      , Utils.InternalAuth
+                     , Utils.Error
+                     , Utils.Data.File
                      , Utils.Data.Auth
   build-depends:       base >= 4.7 && < 5
                      , bytestring >= 0.10
                      , Token
                      , hedis
-                     , servant-server
-                     , servant
+                     , servant-server >= 0.9.1.1
+                     , servant-client >= 0.9.1.1
+                     , servant >= 0.9.1.1
                      , network
+                     , http-client >= 0.4
                      , aeson >= 0.11
                      , base64-bytestring
                      , base64-bytestring

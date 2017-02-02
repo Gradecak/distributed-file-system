@@ -1,9 +1,4 @@
-{-# LANGUAGE DataKinds         #-}
-{-# LANGUAGE DeriveAnyClass    #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RankNTypes        #-}
-{-# LANGUAGE TypeFamilies      #-}
-{-# LANGUAGE TypeOperators     #-}
 
 module FileSystem.Service (startApp) where
 
@@ -13,7 +8,7 @@ import           Control.Monad.Reader
 import qualified Database.MySQL.Simple       as SQL
 import qualified Database.Redis              as Redis
 import           File.API
-import           FileSystem                  (file, insertFile, selectFile)
+import           FileSystem
 import           FileSystem.Gossip
 import           Network.Wai.Handler.Warp
 import           Servant
@@ -21,7 +16,7 @@ import           Servant.Server
 import           Token                       (InternalToken, Token)
 import qualified Token.Store                 as Tok
 import           Utils.Data.File
-import           Utils.FSHandler
+import           Utils.ReaderHandler
 import           Utils.Session
 
 -- | information that our handlers will need access to in order to work
@@ -33,18 +28,30 @@ data FileServiceInfo = Info { fileServers   :: TVar.TVar [(String,Int)]
                             }
 
 -- | Custom monad that our handlers will run in
-type FileM = FSHandler FileServiceInfo
+type FileM = ReaderHandler FileServiceInfo
 
 -- | our transformed server
 servant :: ServerT FileAPI FileM
-servant = addAuthorized
-          :<|> get
+servant =      get
           :<|> put
           :<|> gossip
-          :<|> create
+          :<|> (fileOp newFile)
+          :<|> (fileOp deleteFile)
+          :<|> addAuthorized
+          :<|> newFileServer
 
-create :: Maybe InternalToken -> File -> FileM ()
-create tok file = internalAuth tok >> put () file
+newFileServer :: Maybe InternalToken -> (String,Int) -> FileM ()
+newFileServer iTok addr = do
+    internalAuth iTok
+    Info{fileServers=fs} <- ask
+    liftIO $ Stm.atomically $ TVar.modifyTVar' fs (addr:)
+
+-- | a higher order function for creating/deleting files from our DB
+fileOp :: (a -> SqlCommand) -> Maybe InternalToken -> a -> FileM ()
+fileOp cmd tok fileId = do
+    internalAuth tok
+    Info{sqlCon=c} <- ask
+    void (liftIO $ cmd fileId c)
 
 internalAuth :: Maybe InternalToken -> FileM ()
 internalAuth Nothing = throwError err401 {errBody="Missing service token"}
@@ -55,14 +62,15 @@ internalAuth (Just x) = do
        else throwError err401 {errBody="Missing service token"}
 
 -- | add an authorized token to our store
-addAuthorized :: Token -> FileM NoContent
-addAuthorized t = do
+addAuthorized :: Maybe InternalToken -> Token -> FileM NoContent
+addAuthorized iTok newToken = do
+    internalAuth iTok
     Info{redisCon=c} <- ask
-    liftIO $ _authorize c t
+    liftIO $ _authorize c newToken
     return NoContent
 
 -- | retrieve file from database
-get :: () -> FilePath -> FileM (Maybe File)
+get :: () -> String -> FileM (Maybe File)
 get _ path = do
     Info{sqlCon=c} <- ask
     x <- liftIO $ selectFile [path] c
@@ -72,7 +80,7 @@ get _ path = do
 put :: () -> File -> FileM ()
 put _ file = do
     Info{sqlCon=c} <- ask
-    liftIO $ insertFile file c
+    liftIO $ updateFile file c
     return ()
 
 gossip :: Maybe InternalToken -> File -> FileM ()
@@ -83,7 +91,7 @@ gossip tok file = do
         t      <- TVar.readTVarIO gossTbl
         f      <- TVar.readTVarIO fsList
         return (t,f)
-    x <- get () (filepath file) -- retrieve current version of file
+    x <- get () (fileId file) -- retrieve current version of file
     case x of
       Nothing -> liftIO $ startGossip file table fs token
       Just x  -> compareVersions (file,x) token fs
