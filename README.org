@@ -1,0 +1,76 @@
+* Distributed FileSystem (DFS)
+
+** DFS Services:
+   - Authentication Service
+   - Directory Service
+   - Transaction/Locking Service
+   - File Service
+   - Client Library (Proxy)
+
+*** Authentication Service:
+**** Service Overview:
+     The Authentication service is the main authority in the DFS it handles
+     client authentication, inter-service authentication and system state
+     tracking (i.e. fileserver locations, directory server location etc..). All
+     services on startup must report to the Authentication Service before they
+     are officially integrated into the DFS
+**** Message Encryption:
+     The Distributed File System has no bespoke message encryption scheme.
+     Instead, the services of the DFS are meant to be run behind a reverse proxy
+     (Such as Apache, Nginx etc..). In a production system these reverse proxies
+     would guarantee message encryption via TLS. This is standard practice in
+     many REST applications as these web servers are made for this purpose and
+     are more resilient to many types or errors and attacks.
+**** User Authentication:
+     The Authentication service stores a list of Usernames and Password Hashes
+     in a key/value store Redis. A user wishing to use the DFS must first
+     authenticate themselves with the DFS before they can gain access to the
+     system. To authenticate themselves the user will send their username +
+     password hash and the Authentication Service will perform a lookup in the
+     key/value store for matching details. If authentication is successful, the
+     user will be issued with a UUID (Universal Unique Identifier)[Token] and
+     the IP addresses of the Directory and Transaction Services. The token will
+     be set to expire after a number of minutes. As well as issuing the Token to
+     the User, the Authentication service will also broadcast the token to all
+     of the other services. The other services will place the token in their
+     Redis instance, setting the expiry time to that specified by the Token
+     (expiry is provided by Redis as expired tokens will be automatically
+     deleted). A user wishing to access any other service from then on must
+     present their token as a HTTP header (auth-cookie). Each service will then
+     do a lookup on receiving a request in their Redis instance and only valid
+     Token holders will be granted access.
+**** Internal Authentication
+     Different Services within the DFS must also be able to verify each others
+     identities to ensure that no foreign or malicious service is attempting to
+     access the system. As such, when a service (such as Directory or
+     Transaction) is first started. They register themselves with the
+     Authentication service. The Authentication service issues to them
+     information about all of the other services currently in the system (if
+     needed) and also provides them with an Internal Session token. Similar to
+     the client authentication, internal services wishing to communicate to
+     other services via an internally protected endpoint must include the
+     internal token in their request header before their messages will be
+     considered authentic.
+
+*** Directory Service:
+**** Service Overview:
+     The Directory service is responsible for mapping human readable file-paths
+     to fileservers and file ID's. As well as this, the directory service is
+     charged with creation of new files and allocating which fileservers the
+     files are to be replicated.
+**** FilePath to FileServer mapping
+     The mapping of file-paths to file server is done through a 'shadow'
+     filesystem. The Directory server makes use of the hosts filesystem in order
+     to create a mapping between file-paths and the fileservers in which the
+     file resides. When a new file is created the directory service selects the
+     fileservers on which the file should be placed. this list of file locations
+     (FileHandles) is then serialized and written to a file in the 'shadow'
+     filesystem corresponding to the file-path that the new file can be found
+     at. Similarly, when a user wishes to find out where a file is located, they
+     provide a filepath which is looked up in the shadow file-system. The file
+     that the path is pointing to is read in, giving us a list of FileHandles.
+     the head of the list is returned, and is then moved to the end of the list,
+     providing a sort of round-robin balancing of file access'. Recently
+     accessed filepaths are cached in memory meaning that we can avoid expensive
+     file read operations for frequently accessed files.
+****
