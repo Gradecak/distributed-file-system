@@ -39,6 +39,7 @@ library
                      , unordered-containers
                      , text
                      , strict
+                     , split
                      , hedis
                      , directory >= 1.2
                      , wai >= 3.2

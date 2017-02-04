@@ -23,7 +23,7 @@ type FileAPI =
 
    -- Internal End Points
    :<|> "gossip" :> ProtectInternal
-                 :> ReqBody '[JSON] (File)
+                 :> ReqBody '[JSON] File
                  :> Post '[JSON] ()
 
    :<|> "create" :> ProtectInternal
@@ -34,9 +34,9 @@ type FileAPI =
                  :> ReqBody '[JSON] FileID
                  :> Post '[JSON] ()
 
-   :<|> TokenEndPt
-
    :<|> RegisterFileServer
+
+   :<|> TokenEndPt
 
 fileAPI :: Proxy FileAPI
 fileAPI = Proxy

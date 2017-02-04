@@ -4,6 +4,7 @@ module Dir.Service (startApp) where
 
 import qualified Control.Concurrent.STM      as Stm
 import qualified Control.Concurrent.STM.TVar as TVar
+import Control.Monad (unless)
 import           Control.Monad.Except
 import           Control.Monad.Reader
 import           Database.Redis
@@ -48,6 +49,7 @@ servant =   -- public endpoint handlers
 addAuthorized :: Maybe InternalToken -> Token -> DirM NoContent
 addAuthorized tok t = do
     internalAuth tok
+    liftIO $ print "got a new fucking token"
     Info{redisConn=c} <- ask
     liftIO $ Tok.insert t c
     return NoContent
@@ -71,35 +73,39 @@ publicLS _ (Just path) = do
 
 -- | move the file/directory from src to destination (Src, Dest)
 mv :: Maybe String -> (FilePath, FilePath) -> DirM ()
-mv tok srcDest = internalAuth tok >> (liftIO $ Dir.move $ relative srcDest)
+mv tok srcDest = internalAuth tok >> liftIO (Dir.move $ relative srcDest)
   -- convert our touple of paths into relative paths for use with the 'shadow filesystem'
-  where relative = (\(p1,p2) -> (makeRelative p1, makeRelative p2))
+  where relative (p1,p2) = (shadow p1, shadow p2)
 
 -- | list the contents of the provided path in the 'shadow' filesystem
-ls :: (Maybe String) -> Maybe FilePath -> DirM (Maybe [FilePath])
-ls tok (Just path) = internalAuth tok >> (liftIO $ listDir $ makeRelative path)
-ls tok  Nothing = internalAuth tok    >> (lift $ throwError err400 { errBody="Missing File Path"})
+ls :: Maybe String -> Maybe FilePath -> DirM (Maybe [FilePath])
+ls tok (Just path) = internalAuth tok >> liftIO (listDir $ shadow path)
+ls tok  Nothing    = internalAuth tok >> throwError err400 { errBody="Missing File Path"}
 
 -- | Resolve a file request to the server the file is residing on. if the
 -- requested mode is Read we will only try to read the file, returning Nothing
 -- if it fails. if the requested mode is Read/ReadWrite, we will open a new file
 -- if reading fails, returning the newly opened File
 openF :: Maybe String -> FileRequest -> DirM (Maybe FileHandle)
-openF tok (Request path Read) = internalAuth tok >> (liftIO $ getF path)
+openF tok (Request path Read) = internalAuth tok >> liftIO (getF path)
 openF tok (Request path _) = do
     internalAuth tok
     Info{fileServers=f, internalToken=t} <- ask
     liftIO $ do
         fileHandle <- getF path        -- attempt to get fileHandle
+        putStrLn "got potential file handle"
         case fileHandle of
-          Just f  -> return fileHandle -- if file exists return fileHandle
+          Just f  -> putStrLn "found file returning file" >> return fileHandle -- if file exists return fileHandle
           Nothing -> do                -- else open new file
+              putStrLn $ "path" ++ show path
               fs <- TVar.readTVarIO f
               fmap Just (newFile path fs t)
 
 registerFileServer :: Maybe String -> (String, Int) -> DirM ()
 registerFileServer tok ip = do
+    liftIO $ putStrLn "new file server!!"
     internalAuth tok
+    liftIO $ putStrLn "new file server!!"
     Info{fileServers=servers} <- ask
     void $ liftIO $ Stm.atomically $ TVar.modifyTVar' servers (ip :)
 {----------------------------------------------------------------------------------}
@@ -111,10 +117,7 @@ internalAuth :: Maybe InternalToken -> DirM ()
 internalAuth Nothing = throwError err401 {errBody="Missing service token"}
 internalAuth (Just x) = do
     Info{internalToken=t} <- ask
-    if x == t
-       then return ()
-       else throwError err401 {errBody="Missing service token"}
-
+    unless (x == t) $ throwError err401 {errBody="Missing service token"}
 
 app :: HandlerData -> Application
 app inf = serveWithContext dirAPI (genAuthServerContext $ redisConn inf) (server inf)
@@ -126,5 +129,5 @@ server inf = enter (readerToHandler inf) servant
 startApp :: Int -> InternalToken -> [(String,Int)] -> IO ()
 startApp port tok fileservers = do
     x    <- TVar.newTVarIO fileservers
-    conn <- connect defaultConnectInfo {connectPort=(PortNumber 6380)}
-    run port $ app (Info {fileServers = x, redisConn = conn, internalToken=tok})
+    conn <- connect defaultConnectInfo {connectPort=PortNumber 6380}
+    run port $ app Info {fileServers = x, redisConn = conn, internalToken=tok}

@@ -37,9 +37,9 @@ resolver: lts-7.12
 # will not be run. This is useful for tweaking upstream packages.
 packages:
 - '.'
-- '/Users/maki/Documents/Haskell/fileSystem/Token/'
-- '/Users/maki/Documents/Haskell/fileSystem/Utils/'
-- '/Users/maki/Documents/Haskell/fileSystem/API/'
+- '../Token/'
+- '../Utils/'
+- '../API'
 
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)

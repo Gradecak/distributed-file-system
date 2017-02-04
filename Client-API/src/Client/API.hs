@@ -1,14 +1,18 @@
-{-# LANGUAGE DataKinds            #-}
-{-# LANGUAGE OverloadedStrings    #-}
-{-# LANGUAGE TypeFamilies         #-}
+{-# LANGUAGE DataKinds         #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeFamilies      #-}
 
+-- | Exporting everything that the client will need to fully interact with the
+-- system. Including members of the util library.
 module Client.API (ClientState, Auth(..),
-                   initNewClient, register,
+                   register, runNewClient,
                    authenticate, openFile, closeFile,
                    getFile, putFile, listDir, moveDir,
-                   rmFile, runClient) where
+                   rmFile, runClient, FileMode(..), FileHandle(..)
+                  ,File(..), FileRequest(..)) where
 
 import           Authentication.API            (authEndPt, registerEndPt)
+import           Control.Monad                 (when)
 import           Control.Monad.Except
 import           Control.Monad.State
 import           Directory.API                 (lsEndPt)
@@ -41,16 +45,28 @@ data Env = Env { authAddr    :: Address
 
 type ClientState = ClientT Env
 
-runClient :: Auth -> Address -> StateT Env (ExceptT e IO) a -> IO (Either e (a, Env))
-runClient auth addr a = do
-    manager <- newManager defaultManagerSettings
-    runExceptT (runStateT a (Env{credentials=auth, authAddr=addr, httpMan=manager}))
-
 type instance AuthClientData (AuthProtect "cookie-auth") = String
 
+-- | to run our client we must provide client credentials and the address of
+-- Authentication service, runClient will then make an authentication call to
+-- the auth server.
+runClient :: Auth -> Address -> StateT Env (ExceptT ServantError IO) a -> IO (Either ServantError (a, Env))
+runClient auth addr a = do
+    manager <- newManager defaultManagerSettings
+    runExceptT (runStateT (authenticate>>a) Env{credentials=auth, authAddr=addr, httpMan=manager})
+
+-- | running a new client will register the supplied credentials with the
+-- authentication server and then authenticate.
+runNewClient :: Auth -> Address -> StateT Env (ExceptT ServantError IO) a -> IO (Either ServantError (a, Env))
+runNewClient auth addr a = do
+    manager <- newManager defaultManagerSettings
+    runExceptT (runStateT (register>>authenticate>>a) Env{credentials=auth, authAddr=addr, httpMan=manager})
+
+-- | Add the client token header to allow for querying of protected end points
 addCookieToEndPt :: (AuthenticateReq (AuthProtect "cookie-auth") -> c) -> ClientState c
 addCookieToEndPt x = get >>= (\Env{authCookie=c} -> return $ x (mkAuthenticateReq c (addHeader "auth-cookie")))
 
+{----------- State Setter functions-----------}
 setAuthAddr :: Address -> ClientState ()
 setAuthAddr addr = get >>= \inf -> put $ inf{authAddr=addr}
 
@@ -62,12 +78,13 @@ setDirAddr addr = get >>= \inf -> put $ inf{dirAddr=addr}
 
 setToken :: String -> ClientState ()
 setToken tok = get >>= \inf -> put $ inf{authCookie=tok}
+{---------------------------------------------}
 
+-- | automatically renew token if it is suspspected to be expired
 tokenExpired :: ServantErr -> ClientState ()
-tokenExpired err = if (errBody err) == "Invalid Auth Cookie"
-                   then authenticate
-                   else return ()
+tokenExpired err = when (errBody err == "Invalid Auth Cookie") authenticate
 
+-- | a HOF for running servant client queries on end points
 runQuery :: (Env -> Address) -> ClientM a -> ClientState a
 runQuery dest endPt = do
     env@Env{httpMan=manager} <- get
@@ -75,8 +92,8 @@ runQuery dest endPt = do
         remote = ClientEnv manager (BaseUrl Http ip port "")
     res <- liftIO $ runClientM endPt remote
     case res of
-      Left err -> (liftIO $ print $ show err) >> throwError err
-      Right x  -> (liftIO $ print "success") >> return x
+      Left err -> liftIO (print $ show err) >> throwError err
+      Right x  -> liftIO (print "success" ) >> return x
 
 register ::ClientState ()
 register = get >>= \Env{credentials=c} -> runQuery authAddr (registerEndPt c)
@@ -102,12 +119,12 @@ closeFile path = do
 getFile :: FileHandle -> ClientState (Maybe File)
 getFile (FileHandle id addr) = do
     x <- addCookieToEndPt getEndPt
-    runQuery (\_ -> addr) (x id)
+    runQuery (const addr) (x id)
 
 putFile :: File -> FileHandle -> ClientState ()
 putFile file (FileHandle _ addr) = do
     x <- addCookieToEndPt putEndPt
-    runQuery (\_ -> addr) (x file)
+    runQuery (const addr) (x file)
 
 listDir :: FilePath -> ClientState [FilePath]
 listDir path = do
@@ -123,8 +140,4 @@ rmFile :: FilePath -> ClientState ()
 rmFile path = do
     x <- addCookieToEndPt rmEndPt
     runQuery dirAddr (x path)
-
-initNewClient :: ClientState ()
-initNewClient = do
-    register
     authenticate

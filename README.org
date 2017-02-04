@@ -1,6 +1,4 @@
-* Distributed FileSystem (DFS)
-
-* Table of Contents                                                     :TOC:
+* Table of Contents                                :TOC:
  - [[#distributed-filesystem-dfs][Distributed FileSystem (DFS)]]
    - [[#dfs-services][DFS Services:]]
      - [[#authentication-service][Authentication Service:]]
@@ -11,7 +9,12 @@
      - [[#directory-service][Directory Service:]]
        - [[#service-overview-1][Service Overview:]]
        - [[#filepath-to-fileserver-mapping][FilePath to FileServer mapping]]
+       - [[#creating-new-files][Creating New Files]]
+       - [[#deleting-files][Deleting Files]]
+     - [[#transactionlocking-service][Transaction/Locking service]]
+       - [[#service-overview-2][Service Overview]]
 
+* Distributed FileSystem (DFS)
 ** DFS Services:
    - Authentication Service
    - Directory Service
@@ -68,21 +71,44 @@
 **** Service Overview:
      The Directory service is responsible for mapping human readable file-paths
      to fileservers and file ID's. As well as this, the directory service is
-     charged with creation of new files and allocating which fileservers the
-     files are to be replicated.
+     charged with creation/deletion of files and allocating which fileservers the
+     files are to be replicated on.
 **** FilePath to FileServer mapping
      The mapping of file-paths to file server is done through a 'shadow'
      filesystem. The Directory server makes use of the hosts filesystem in order
      to create a mapping between file-paths and the fileservers in which the
      file resides. When a new file is created the directory service selects the
-     fileservers on which the file should be placed. this list of file locations
+     fileservers on which the file should be placed. This list of file locations
      (FileHandles) is then serialized and written to a file in the 'shadow'
-     filesystem corresponding to the file-path that the new file can be found
-     at. Similarly, when a user wishes to find out where a file is located, they
-     provide a filepath which is looked up in the shadow file-system. The file
-     that the path is pointing to is read in, giving us a list of FileHandles.
-     the head of the list is returned, and is then moved to the end of the list,
-     providing a sort of round-robin balancing of file access'. Recently
-     accessed filepaths are cached in memory meaning that we can avoid expensive
-     file read operations for frequently accessed files.
-****
+     filesystem corresponding to the human readable file-path that the user
+     provided.
+
+     Similarly, when a user wishes to find out where a file is
+     located, they provide a filepath which is looked up in the shadow
+     file-system. The file that the path is pointing to is read in, giving us a
+     list of FileHandles. the head of the list is returned, and is then moved to
+     the end of the list, providing a sort of round-robin balancing of file
+     access'. Recently accessed filepaths are cached in memory meaning that we
+     can avoid expensive file access operations for frequently accessed files.
+**** Creating New Files
+     When creating a new file, the directory server first selects N file servers
+     that the file should be duplicated on. Following this, file meta-data is
+     generated (consisting of file-id, server location, version number etc) and
+     disseminated to each of the selected fileservers. This is essentially
+     'version 0' of the file. As well as generating file metadata the directory
+     service also generates a list of FileHandles corresponding to which
+     fileserver the file can be found on. The user who requested the new file is
+     given a file handle which contains the IP and file-id of the requested
+     file. Once they upload the file to the fileserver they were given, the file
+     version is updated and the GOSSIP protocol ensures that all of the N chosen
+     file servers get the new version.
+**** Deleting Files
+     Deleting files is simple, the user provides a filepath to the file they
+     wish to remove. This file is located in the shadow file system and read in
+     to memory, giving us a list of FileHandles (file meta-data). Each of the
+     fileservers mentioned in the list of FileHandles is notified of the file
+     deletion and instructed to delete their copy of the file. The directory
+     service then simply removes the meta-data file from the shadow filesystem.
+*** Transaction/Locking service
+**** Service Overview
+     The

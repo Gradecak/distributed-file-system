@@ -39,7 +39,6 @@ serveToken ip (Auth a b) = do
             return (clientToken, (ds,ts))
       else throwError err401 {errBody = "Authentication Failure"}
 
-
 -- | Register a new user with the Distributed File System
 register :: Auth -> AuthM ()
 register user = do
@@ -53,7 +52,7 @@ newDir  :: SockAddr -> Maybe Int -> AuthM (InternalToken, [Addr])
 newDir _ Nothing = throwError err417{errBody = "Missing Service Port"}
 newDir addr (Just port) = do
     Info{dirServer=d, internalToken=tok, fileServers=tfs} <- ask
-    liftIO $ do Stm.atomically $ TVar.writeTVar d (head $ splitOn ":" $ show addr,port)
+    liftIO $ do Stm.atomically $ TVar.writeTVar d (stripPort addr,port)
                 fs <- TVar.readTVarIO tfs
                 return (tok, fs)
 
@@ -61,7 +60,7 @@ newDir addr (Just port) = do
 -- | services in the system of the new service
 newFS :: SockAddr -> Maybe Int-> AuthM (InternalToken, [Addr])
 newFS ip Nothing     = throwError err417{errBody = "Missing Service Port"}
-newFS ip (Just port) = addNewFS (head $ splitOn ":" $ show ip, port)
+newFS ip (Just port) = addNewFS (stripPort ip, port)
 
 -- | serve the transaction server attempting to connect to the system with
 -- | the internal session token and the address (Ip, port) of the directory service
@@ -71,9 +70,11 @@ newTrans ip (Just port) = do
     Info{fileServers=f, dirServer=d, internalToken=tok, transServer=ts} <- ask
     liftIO $ do
         ds <- TVar.readTVarIO d
-        Stm.atomically $ TVar.writeTVar ts (head $ splitOn ":" $ show ip,port)
+        Stm.atomically $ TVar.writeTVar ts (stripPort ip ,port)
         return (tok, ds)
 
+stripPort :: SockAddr -> String
+stripPort = head . splitOn ":" . show
 
 {- Service Initialisation -}
 app :: HandlerData -> Application

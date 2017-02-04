@@ -60,16 +60,14 @@ open :: () -> FileRequest -> TransM (Maybe FileHandle)
 open _ r = do
     fileHandle <- resolveFile r
     x          <- aquireFileLock r
-    return $ case x of
-      True  -> Just fileHandle
-      False -> Nothing
+    return $ if x then Just fileHandle else Nothing
 
 -- | Ask the directory server to resolve the fileRequest, if the file is not
 -- found throw http404 else return file
 resolveFile :: FileRequest -> TransM FileHandle
 resolveFile r = do
     Info{internalToken=tok, dirServer=d} <- ask
-    file <- liftIO $ (openFile d r tok)
+    file <- liftIO (openFile d r tok)
     case file of
       Nothing -> throwError err404{errBody="File not found"}
       Just x -> return x

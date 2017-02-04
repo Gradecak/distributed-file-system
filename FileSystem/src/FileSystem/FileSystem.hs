@@ -48,6 +48,12 @@ sqlCmd_ q conn = execute_ conn q
   q1 conn
   q2 conn
 
+-- | a safe head function
+-- | used for safely extracting the result of a database query
+head' :: [a] -> Maybe a
+head' [] = Nothing
+head' a  = Just $ head a
+
 -- | insert file into our table
 insertFile :: File -> SqlCommand
 insertFile (File name version fileId bytes) = sqlCmd "insert into files (name,version,fileId,bytes) values (?,?,?,?)" (name,version,fileId,bytes)
@@ -60,13 +66,13 @@ deleteFile p = sqlCmd "DELETE FROM files WHERE files.fileId=?" [p]
 
 -- | update file in the database
 updateFile :: File -> SqlCommand
-updateFile (File name version fileId bytes) = sqlCmd "update files set files.name=?, files.version=files.version+1, files.bytes=? where files.fileId=?" (name,bytes,fileId)
+updateFile (File name version fileId bytes) = sqlCmd "update files set files.name=?, files.version=?, files.bytes=? where files.fileId=?" (name,version,bytes,fileId)
 
 selectAllFiles :: SqlQuery [File]
 selectAllFiles = sqlQuery_ "select name, version, fileid, bytes from files"
 
-selectFile :: [String] -> SqlQuery [File]
-selectFile p = sqlQuery "select name, version, fileid, bytes from files where fileid=?" p
+selectFile :: String -> SqlQuery (Maybe File)
+selectFile p conn = head' <$> sqlQuery "select name, version, fileid, bytes from files where fileid=?" [p] conn
 
 file :: (String,Int, FileID, BS.ByteString) -> File
 file (name,version, id, bytes) = File name version id bytes

@@ -21,7 +21,7 @@ tokenAPI = Proxy
 
 _tokenEndPt = client tokenAPI
 
-type RegisterFileServer = "/registerFS" :> ProtectInternal
+type RegisterFileServer = "registerfs" :> ProtectInternal
                                         :> ReqBody '[JSON] (String,Int)
                                         :> Post '[JSON] ()
 

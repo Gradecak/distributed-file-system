@@ -7,7 +7,6 @@ import           Network.HTTP.Client (Manager, defaultManagerSettings,
                                       newManager)
 import           Servant.Client
 import           System.Environment  (getArgs)
-import           System.Environment  (getArgs)
 import           Token               (InternalToken)
 
 query :: Int -> ClientM (InternalToken, [(String, Int)])

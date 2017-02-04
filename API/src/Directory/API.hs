@@ -2,8 +2,7 @@
 {-# LANGUAGE TypeOperators #-}
 
 module Directory.API (DirAPI, dirAPI, lsEndPt, _lsEndPt,
-                      _openEndPt, _mvEndPt, _registerEndPt,
-                      _rmEndPt) where
+                      _openEndPt, _mvEndPt, _rmEndPt) where
 
 import           Data.Proxy
 import           Servant.API
@@ -24,7 +23,7 @@ import           Utils.InternalAuth
 type DirAPI =
               "list"     :> AuthProtect "cookie-auth"
                          :> QueryParam "path" FilePath
-                         :> Get '[JSON] ([FilePath])
+                         :> Get '[JSON] [FilePath]
 
          :<|> "ls"       :> ProtectInternal
                          :> QueryParam "path" FilePath
@@ -49,4 +48,4 @@ type DirAPI =
 dirAPI :: Proxy DirAPI
 dirAPI = Proxy
 
-lsEndPt :<|> _lsEndPt :<|> _openEndPt :<|> _mvEndPt :<|> _rmEndPt:<|> _registerEndPt :<|> _ = client dirAPI
+lsEndPt :<|> _lsEndPt :<|> _openEndPt :<|> _mvEndPt :<|> _rmEndPt:<|> _ :<|> _ = client dirAPI

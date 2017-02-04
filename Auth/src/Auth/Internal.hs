@@ -1,5 +1,4 @@
 {-# LANGUAGE DataKinds     #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeOperators #-}
 
 module Auth.Internal (HandlerData(..), AuthM, ask,
@@ -12,12 +11,11 @@ import           Control.Monad.Reader
 import           Crypto.PasswordStore
 import qualified Data.ByteString.Char8       as BS
 import           Database.Redis
-import           Directory.API               (_registerEndPt)
 import           Network.HTTP.Client         (Manager, defaultManagerSettings,
                                               newManager)
 import           Servant.API
 import           Servant.Client
-import           Shared.API                  (_tokenEndPt)
+import           Shared.API (_registerFsEndPt, _tokenEndPt)
 import           Token                       (InternalToken, Token)
 import           Token.Generate
 import           Utils.Data.Auth
@@ -44,13 +42,15 @@ addNewFS newFS = do
     liftIO $ do
         fs <- readTVarIO f
         ds <- readTVarIO d
-        queryAPI (ds:fs) (_registerEndPt (Just tok) newFS)
+        print $ show $ ds:fs
+        print "notifying directory"
+        queryAPI (ds:fs) (_registerFsEndPt (Just tok) newFS)
         atomically $ modifyTVar' f (newFS:)
         return (tok,fs)
 
 -- | Generate a token and notify all interested services of new valid token,
 -- returns the newly generated token
-generateToken :: String -> AuthM (Token)
+generateToken :: String -> AuthM Token
 generateToken ip = do
     Info{internalToken=t, dirServer=d, fileServers=f, transServer=trans} <- ask
     liftIO $ do
@@ -58,6 +58,7 @@ generateToken ip = do
         ds       <- readTVarIO d
         fs       <- readTVarIO f
         ts       <- readTVarIO trans
+        print (ts:ds:fs)
         queryAPI (ts:ds:fs) (_tokenEndPt (Just t) newToken)
         return newToken
 
@@ -74,7 +75,6 @@ addUser (Auth uname pswd) conn = do
     void $ runRedis conn $ set (BS.pack uname) pswdHash
 
 {- Module Internal Functions -}
-
 -- | Convert the destingations from [(String,Int)] format to a
 -- | Servant-Client usable format [ClientEnv]
 genDestinations :: [(String,Int)] -> Manager -> [ClientEnv]
@@ -83,8 +83,8 @@ genDestinations x m = map (\(ip,port) -> ClientEnv m (BaseUrl Http ip port "")) 
 -- | a HOF for querying a set of endpoints
 -- | given the Endpoints.                       -> [(String,Int)]
 -- | and the function for interacting with api. -> (ClientM a)
-queryAPI :: [(String,Int)] -> (ClientM b) -> IO ()
-queryAPI endpts endpt= do
+queryAPI :: [(String,Int)] -> ClientM b -> IO ()
+queryAPI dest endpt= do
     manager <- newManager defaultManagerSettings
-    let destinations = genDestinations endpts manager
-    mapM_ (runClientM (endpt)) destinations
+    let destinations = genDestinations dest manager
+    mapM_ (runClientM endpt) destinations
