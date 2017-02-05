@@ -13,6 +13,7 @@
        - [[#deleting-files][Deleting Files]]
      - [[#transactionlocking-service][Transaction/Locking service]]
        - [[#service-overview-2][Service Overview]]
+       - [[#locking][Locking]]
 
 * Distributed FileSystem (DFS)
 ** DFS Services:
@@ -111,4 +112,14 @@
      service then simply removes the meta-data file from the shadow filesystem.
 *** Transaction/Locking service
 **** Service Overview
-     The
+     The Transaction/Locking service is a Transaction service and a Locking
+     service combined into one. It is responsible for locking/unlocking single
+     files as well as providing transactions when more complicated operations
+     such as directory moves are preformed.
+**** Locking
+     The locking service is implemented using a simple hash table. The hash
+     table maps file paths to the status of the file (Locked/Unlocked). When a
+     user wishes to access a file, the only way that they can find out what
+     fileserver it resides on is for them to request to open the file from the
+     Transaction/Locking service. The Transaction/Locking service lookup the
+     status of the provided filepath, if its locked the client is served with

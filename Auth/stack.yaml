@@ -15,7 +15,15 @@
 # resolver:
 #  name: custom-snapshot
 #  location: "./custom-snapshot.yaml"
-resolver: lts-7.12
+resolver: lts-7.16
+
+docker:
+  enable: true
+
+image:
+  container:
+    name: auth
+    base: fpco/stack-run
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.

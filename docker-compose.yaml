@@ -1,0 +1,49 @@
+version: '2'
+
+services:
+#---------------------- Authentication Service--------------------#
+  auth-redis:
+    image: redis:3.2.7-alpine
+
+  auth-service:
+    image: auth
+    command: authServer-exe
+    environment: &authport #give a tag to auth port
+      AUTH_SERVICE_PORT: 8080
+    depends_on:
+      - auth-redis
+    ports:
+      - "8080:8080"
+
+# --------------------Directory Service ---------------------------#
+  dir-redis:
+    image: redis:3.2.7-alpine
+
+  dir-service:
+    image: dir
+    command: dirServer-exe
+    environment:
+      <<: *authport # inhert auth port
+      DIRECTORY_PORT: 8081
+    depends_on:
+      - auth-service
+      - dir-redis
+    ports:
+      - "8081:8081"
+
+# -------------------Transaction Service ---------------------------#
+  trans-redis:
+    image: redis:3.2.7-alpine
+
+  trans-service:
+    image: trans
+    command: Transction-exe
+    environment:
+      <<: *authport # inherit auth port
+      TRANSACTION_PORT: 8082
+    depends_on:
+      - auth-service
+      - dir-service
+    ports:
+      - "8082:8082"
+# ------------------------------------------------------------------#

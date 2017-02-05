@@ -32,7 +32,6 @@ library
                      , mtl >= 2.2
                      , wai >= 3.2
                      , Token
---                     , cgi
                      , API
                      , http-client >= 0.4
                      , hedis

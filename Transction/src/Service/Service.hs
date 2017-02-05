@@ -141,7 +141,7 @@ server inf = enter (readerToHandler inf) servant
 startApp :: Int -> InternalToken -> (String,Int) -> IO ()
 startApp port tok dirserver = do
     lockTable  <- TVar.newTVarIO (newTable) -- create an empty lock table
-    conn <- Redis.connect Redis.defaultConnectInfo {Redis.connectPort=(Redis.PortNumber 6381)}
+    conn <- Redis.connect Redis.defaultConnectInfo {Redis.connectHost="trans-redis"}
     run port $ app (Info {redisConn = conn,
                           internalToken=tok,
                           dirServer=dirserver,

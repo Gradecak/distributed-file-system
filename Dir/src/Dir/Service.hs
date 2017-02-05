@@ -129,5 +129,5 @@ server inf = enter (readerToHandler inf) servant
 startApp :: Int -> InternalToken -> [(String,Int)] -> IO ()
 startApp port tok fileservers = do
     x    <- TVar.newTVarIO fileservers
-    conn <- connect defaultConnectInfo {connectPort=PortNumber 6380}
+    conn <- connect defaultConnectInfo {connectHost="dir-redis"}
     run port $ app Info {fileServers = x, redisConn = conn, internalToken=tok}

@@ -9,13 +9,10 @@ import           Servant.Client
 import           System.Environment  (getArgs)
 import           Token               (InternalToken)
 
-query :: Int -> ClientM (InternalToken, [(String, Int)])
-query i = fsysEndPt (Just i)
-
 registerWithAuth :: Int -> (String,Int) -> IO (Maybe (InternalToken, [(String, Int)]))
 registerWithAuth srcPort (addr,port) = do
     manager <- newManager defaultManagerSettings
-    res <- runClientM (query srcPort) (ClientEnv manager (BaseUrl Http addr port ""))
+    res <- runClientM (fsysEndPt $ Just srcPort) (ClientEnv manager (BaseUrl Http addr port ""))
     return $ case res of
       Left err -> Nothing
       Right x  -> Just x

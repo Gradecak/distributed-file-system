@@ -15,6 +15,7 @@ import           Token                       (InternalToken, Token)
 import           Token.Generate
 import           Utils.Data.Auth (Auth(..))
 import           Utils.ReaderHandler
+import System.Environment
 
 server :: ServerT AuthAPI AuthM
 server =      serveToken
@@ -83,14 +84,14 @@ app inf = serve authAPI $ readerServer inf
 readerServer :: HandlerData -> Server AuthAPI
 readerServer inf = enter (readerToHandler inf) server
 
-runAuthService :: IO ()
-runAuthService = do
+runAuthService :: Int -> IO ()
+runAuthService port = do
     fs <- TVar.newTVarIO []
     ds <- TVar.newTVarIO ("",-1)
     ts <- TVar.newTVarIO ("",-1)
-    conn <- DB.connect DB.defaultConnectInfo
+    conn <-  DB.connect DB.defaultConnectInfo{DB.connectHost="auth-redis"}
     internalTok <- genInternalToken
-    run 8080 $ app (Info {fileServers=fs,
+    run port $ app (Info {fileServers=fs,
                           dirServer=ds,
                           redisCon=conn,
                           internalToken=internalTok,
