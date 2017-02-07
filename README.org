@@ -8,7 +8,7 @@
        - [[#internal-authentication][Internal Authentication]]
      - [[#directory-service][Directory Service:]]
        - [[#service-overview-1][Service Overview:]]
-         - [[#api][API:]]
+       - [[#api][API:]]
        - [[#filepath-to-fileserver-mapping][FilePath to FileServer mapping]]
        - [[#creating-new-files][Creating New Files]]
        - [[#deleting-files][Deleting Files]]
@@ -18,12 +18,6 @@
 
 * Distributed FileSystem (DFS)
 ** DFS Services:
-   - Authentication Service
-   - Directory Service
-   - Transaction/Locking Service
-   - File Service
-   - Client Library (Proxy)
-
 *** Authentication Service:
 **** Service Overview:
      The Authentication service is the main authority in the DFS it handles
@@ -75,16 +69,19 @@
      to fileservers and file ID's. As well as this, the directory service is
      charged with creation/deletion of files and allocating which fileservers the
      files are to be replicated on.
-***** API:
-      -Public Endpoints:
+**** API:
+     -Public Endpoints:
 
-      /list : returns the contents of a directory
+     */list* : returns the contents of a directory
 
-      -Private Endpoints:
-      /ls   : same as /list but internal
-      /open : resolve a filePath to a fileHandle (location on a fileserver)
-      /mv   : move a src to destination
-      /rm   : remove a file
+     -Internal Endpoints:
+     ```
+     */ls*   : same as /list but internal
+     */open* : resolve a filePath to a fileHandle (location on a fileserver)
+     */mv*   : move a src to destination
+     */rm*   : remove a file
+     */registerfs :
+     ```
 **** FilePath to FileServer mapping
      The mapping of file-paths to file server is done through a 'shadow'
      filesystem. The Directory server makes use of the hosts filesystem in order
