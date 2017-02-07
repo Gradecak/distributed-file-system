@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2017-02-07 Tue 14:35 -->
+<!-- 2017-02-07 Tue 15:18 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title></title>
@@ -179,12 +179,12 @@
   .org-svg { width: 90%; }
   /*]]>*/-->
 </style>
-<link rel="stylesheet" type="text/css" href="http://www.pirilampo.org/styles/readtheorg/css/htmlize.css"/>
-<link rel="stylesheet" type="text/css" href="http://www.pirilampo.org/styles/readtheorg/css/readtheorg.css"/>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-<script type="text/javascript" src="http://www.pirilampo.org/styles/lib/js/jquery.stickytableheaders.js"></script>
-<script type="text/javascript" src="http://www.pirilampo.org/styles/readtheorg/js/readtheorg.js"></script>
+<link rel="stylesheet" type="text/css" href="https://www.pirilampo.org/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="https://www.pirilampo.org/styles/readtheorg/css/readtheorg.css"/>
+<script src="httpss://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="httpss://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="https://www.pirilampo.org/styles/lib/js/jquery.stickytableheaders.js"></script>
+<script type="text/javascript" src="https://www.pirilampo.org/styles/readtheorg/js/readtheorg.js"></script>
 <style>pre.src {background-color: #222; color: #fff; font-family: "Fira Code"} pre {box-shadow: none;}</style>
 <script type="text/javascript">
 /*
@@ -239,48 +239,48 @@ for the JavaScript code in this tag.
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orgd8aa655">1. Distributed FileSystem (DFS)</a></li>
-<li><a href="#org99bf35d">2. Authentication Service:</a>
+<li><a href="#org5ba4f6b">1. Distributed FileSystem (DFS)</a></li>
+<li><a href="#org72a963b">2. Authentication Service:</a>
 <ul>
-<li><a href="#orgb2d7502">2.1. Service Overview:</a></li>
-<li><a href="#orgc22277b">2.2. Message Encryption:</a></li>
-<li><a href="#orgcbef049">2.3. User Authentication:</a></li>
-<li><a href="#org54e7390">2.4. Internal Authentication</a></li>
+<li><a href="#org2bb038b">2.1. Service Overview:</a></li>
+<li><a href="#orge42bc3c">2.2. Message Encryption:</a></li>
+<li><a href="#org516595f">2.3. User Authentication:</a></li>
+<li><a href="#orgf404d09">2.4. Internal Authentication</a></li>
 </ul>
 </li>
-<li><a href="#org93ec993">3. Directory Service:</a>
+<li><a href="#orgd6da844">3. Directory Service:</a>
 <ul>
-<li><a href="#org66d65ca">3.1. Service Overview:</a></li>
-<li><a href="#org6b91cdf">3.2. API:</a></li>
-<li><a href="#org80edefd">3.3. FilePath to FileServer mapping</a></li>
-<li><a href="#org51ec2e3">3.4. Creating New Files</a></li>
-<li><a href="#org2a103ad">3.5. Deleting Files</a></li>
+<li><a href="#org532c4bd">3.1. Service Overview:</a></li>
+<li><a href="#org8143c25">3.2. API:</a></li>
+<li><a href="#org9629c14">3.3. FilePath to FileServer mapping</a></li>
+<li><a href="#orgb6dfee8">3.4. Creating New Files</a></li>
+<li><a href="#org70b3e58">3.5. Deleting Files</a></li>
 </ul>
 </li>
-<li><a href="#orgb89b388">4. Transaction/Locking service</a>
+<li><a href="#org2b75f5a">4. Transaction/Locking service</a>
 <ul>
-<li><a href="#orgc39be90">4.1. Service Overview</a></li>
-<li><a href="#org2cca34c">4.2. Locking</a></li>
-<li><a href="#org52a6199">4.3. Transactions</a></li>
+<li><a href="#org91338fe">4.1. Service Overview</a></li>
+<li><a href="#org2dd5925">4.2. Locking</a></li>
+<li><a href="#org7b71b9d">4.3. Transactions</a></li>
 </ul>
 </li>
-<li><a href="#org99d610b">5. File Servers (FileSystem)</a>
+<li><a href="#org189468f">5. File Servers (FileSystem)</a>
 <ul>
-<li><a href="#orga106524">5.1. Service Overview</a></li>
-<li><a href="#org7e95e7f">5.2. File Storage/Retrieval</a></li>
+<li><a href="#org9d55f27">5.1. Service Overview</a></li>
+<li><a href="#org7574ffe">5.2. File Storage/Retrieval</a></li>
 </ul>
 </li>
 </ul>
 </div>
 </div>
-<div id="outline-container-orgd8aa655" class="outline-2">
-<h2 id="orgd8aa655"><span class="section-number-2">1</span> Distributed FileSystem (DFS)</h2>
+<div id="outline-container-org5ba4f6b" class="outline-2">
+<h2 id="org5ba4f6b"><span class="section-number-2">1</span> Distributed FileSystem (DFS)</h2>
 </div>
-<div id="outline-container-org99bf35d" class="outline-2">
-<h2 id="org99bf35d"><span class="section-number-2">2</span> Authentication Service:</h2>
+<div id="outline-container-org72a963b" class="outline-2">
+<h2 id="org72a963b"><span class="section-number-2">2</span> Authentication Service:</h2>
 <div class="outline-text-2" id="text-2">
-</div><div id="outline-container-orgb2d7502" class="outline-3">
-<h3 id="orgb2d7502"><span class="section-number-3">2.1</span> Service Overview:</h3>
+</div><div id="outline-container-org2bb038b" class="outline-3">
+<h3 id="org2bb038b"><span class="section-number-3">2.1</span> Service Overview:</h3>
 <div class="outline-text-3" id="text-2-1">
 <p>
 The Authentication service is the main authority in the DFS it handles
@@ -291,8 +291,8 @@ are officially integrated into the DFS
 </p>
 </div>
 </div>
-<div id="outline-container-orgc22277b" class="outline-3">
-<h3 id="orgc22277b"><span class="section-number-3">2.2</span> Message Encryption:</h3>
+<div id="outline-container-orge42bc3c" class="outline-3">
+<h3 id="orge42bc3c"><span class="section-number-3">2.2</span> Message Encryption:</h3>
 <div class="outline-text-3" id="text-2-2">
 <p>
 The Distributed File System has no bespoke message encryption scheme.
@@ -304,8 +304,8 @@ are more resilient to many types or errors and attacks.
 </p>
 </div>
 </div>
-<div id="outline-container-orgcbef049" class="outline-3">
-<h3 id="orgcbef049"><span class="section-number-3">2.3</span> User Authentication:</h3>
+<div id="outline-container-org516595f" class="outline-3">
+<h3 id="org516595f"><span class="section-number-3">2.3</span> User Authentication:</h3>
 <div class="outline-text-3" id="text-2-3">
 <p>
 The Authentication service stores a list of Usernames and Password Hashes
@@ -328,8 +328,8 @@ Token holders will be granted access.
 </p>
 </div>
 </div>
-<div id="outline-container-org54e7390" class="outline-3">
-<h3 id="org54e7390"><span class="section-number-3">2.4</span> Internal Authentication</h3>
+<div id="outline-container-orgf404d09" class="outline-3">
+<h3 id="orgf404d09"><span class="section-number-3">2.4</span> Internal Authentication</h3>
 <div class="outline-text-3" id="text-2-4">
 <p>
 Different Services within the DFS must also be able to verify each others
@@ -348,11 +348,11 @@ considered authentic.
 </div>
 </div>
 
-<div id="outline-container-org93ec993" class="outline-2">
-<h2 id="org93ec993"><span class="section-number-2">3</span> Directory Service:</h2>
+<div id="outline-container-orgd6da844" class="outline-2">
+<h2 id="orgd6da844"><span class="section-number-2">3</span> Directory Service:</h2>
 <div class="outline-text-2" id="text-3">
-</div><div id="outline-container-org66d65ca" class="outline-3">
-<h3 id="org66d65ca"><span class="section-number-3">3.1</span> Service Overview:</h3>
+</div><div id="outline-container-org532c4bd" class="outline-3">
+<h3 id="org532c4bd"><span class="section-number-3">3.1</span> Service Overview:</h3>
 <div class="outline-text-3" id="text-3-1">
 <p>
 The Directory service is responsible for mapping human readable file-paths
@@ -362,8 +362,8 @@ files are to be replicated on.
 </p>
 </div>
 </div>
-<div id="outline-container-org6b91cdf" class="outline-3">
-<h3 id="org6b91cdf"><span class="section-number-3">3.2</span> API:</h3>
+<div id="outline-container-org8143c25" class="outline-3">
+<h3 id="org8143c25"><span class="section-number-3">3.2</span> API:</h3>
 <div class="outline-text-3" id="text-3-2">
 <p>
 -Public Endpoints:
@@ -383,8 +383,8 @@ files are to be replicated on.
 </p>
 </div>
 </div>
-<div id="outline-container-org80edefd" class="outline-3">
-<h3 id="org80edefd"><span class="section-number-3">3.3</span> FilePath to FileServer mapping</h3>
+<div id="outline-container-org9629c14" class="outline-3">
+<h3 id="org9629c14"><span class="section-number-3">3.3</span> FilePath to FileServer mapping</h3>
 <div class="outline-text-3" id="text-3-3">
 <p>
 The mapping of file-paths to file server is done through a 'shadow'
@@ -408,8 +408,8 @@ can avoid expensive file access operations for frequently accessed files.
 </p>
 </div>
 </div>
-<div id="outline-container-org51ec2e3" class="outline-3">
-<h3 id="org51ec2e3"><span class="section-number-3">3.4</span> Creating New Files</h3>
+<div id="outline-container-orgb6dfee8" class="outline-3">
+<h3 id="orgb6dfee8"><span class="section-number-3">3.4</span> Creating New Files</h3>
 <div class="outline-text-3" id="text-3-4">
 <p>
 When creating a new file, the directory server first selects N file servers
@@ -426,8 +426,8 @@ file servers get the new version.
 </p>
 </div>
 </div>
-<div id="outline-container-org2a103ad" class="outline-3">
-<h3 id="org2a103ad"><span class="section-number-3">3.5</span> Deleting Files</h3>
+<div id="outline-container-org70b3e58" class="outline-3">
+<h3 id="org70b3e58"><span class="section-number-3">3.5</span> Deleting Files</h3>
 <div class="outline-text-3" id="text-3-5">
 <p>
 Deleting files is simple, the user provides a filepath to the file they
@@ -440,11 +440,11 @@ service then simply removes the meta-data file from the shadow filesystem.
 </div>
 </div>
 </div>
-<div id="outline-container-orgb89b388" class="outline-2">
-<h2 id="orgb89b388"><span class="section-number-2">4</span> Transaction/Locking service</h2>
+<div id="outline-container-org2b75f5a" class="outline-2">
+<h2 id="org2b75f5a"><span class="section-number-2">4</span> Transaction/Locking service</h2>
 <div class="outline-text-2" id="text-4">
-</div><div id="outline-container-orgc39be90" class="outline-3">
-<h3 id="orgc39be90"><span class="section-number-3">4.1</span> Service Overview</h3>
+</div><div id="outline-container-org91338fe" class="outline-3">
+<h3 id="org91338fe"><span class="section-number-3">4.1</span> Service Overview</h3>
 <div class="outline-text-3" id="text-4-1">
 <p>
 The Transaction/Locking service is a Transaction service and a Locking
@@ -454,8 +454,8 @@ such as directory moves are preformed.
 </p>
 </div>
 </div>
-<div id="outline-container-org2cca34c" class="outline-3">
-<h3 id="org2cca34c"><span class="section-number-3">4.2</span> Locking</h3>
+<div id="outline-container-org2dd5925" class="outline-3">
+<h3 id="org2dd5925"><span class="section-number-3">4.2</span> Locking</h3>
 <div class="outline-text-3" id="text-4-2">
 <p>
 The locking service is implemented using a simple map. The the map maps file
@@ -470,8 +470,8 @@ is set to locked and the filehandle is served to the user.
 </p>
 </div>
 </div>
-<div id="outline-container-org52a6199" class="outline-3">
-<h3 id="org52a6199"><span class="section-number-3">4.3</span> Transactions</h3>
+<div id="outline-container-org7b71b9d" class="outline-3">
+<h3 id="org7b71b9d"><span class="section-number-3">4.3</span> Transactions</h3>
 <div class="outline-text-3" id="text-4-3">
 <p>
 Transactions are used when a user attempts to execute an operation that will
@@ -485,11 +485,11 @@ locked, the operation is carried out and the resources are unlocked.
 </div>
 </div>
 </div>
-<div id="outline-container-org99d610b" class="outline-2">
-<h2 id="org99d610b"><span class="section-number-2">5</span> File Servers (FileSystem)</h2>
+<div id="outline-container-org189468f" class="outline-2">
+<h2 id="org189468f"><span class="section-number-2">5</span> File Servers (FileSystem)</h2>
 <div class="outline-text-2" id="text-5">
-</div><div id="outline-container-orga106524" class="outline-3">
-<h3 id="orga106524"><span class="section-number-3">5.1</span> Service Overview</h3>
+</div><div id="outline-container-org9d55f27" class="outline-3">
+<h3 id="org9d55f27"><span class="section-number-3">5.1</span> Service Overview</h3>
 <div class="outline-text-3" id="text-5-1">
 <p>
 The file server is the service responsible for the actual storing of the
@@ -500,14 +500,14 @@ file servers through the user of a gossip protocol.
 </p>
 </div>
 </div>
-<div id="outline-container-org7e95e7f" class="outline-3">
-<h3 id="org7e95e7f"><span class="section-number-3">5.2</span> File Storage/Retrieval</h3>
+<div id="outline-container-org7574ffe" class="outline-3">
+<h3 id="org7574ffe"><span class="section-number-3">5.2</span> File Storage/Retrieval</h3>
 </div>
 </div>
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: Marijan Gradecak</p>
-<p class="date">Created: 2017-02-07 Tue 14:35</p>
+<p class="date">Created: 2017-02-07 Tue 15:18</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
