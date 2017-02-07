@@ -1,7 +1,7 @@
 #!/bin/sh
-
 function build_container {
     cd "$1"
+    stack docker pull
     stack build
     stack image container
     cd ".."

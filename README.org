@@ -8,6 +8,7 @@
        - [[#internal-authentication][Internal Authentication]]
      - [[#directory-service][Directory Service:]]
        - [[#service-overview-1][Service Overview:]]
+         - [[#api][API:]]
        - [[#filepath-to-fileserver-mapping][FilePath to FileServer mapping]]
        - [[#creating-new-files][Creating New Files]]
        - [[#deleting-files][Deleting Files]]
@@ -74,6 +75,16 @@
      to fileservers and file ID's. As well as this, the directory service is
      charged with creation/deletion of files and allocating which fileservers the
      files are to be replicated on.
+***** API:
+      -Public Endpoints:
+
+      /list : returns the contents of a directory
+
+      -Private Endpoints:
+      /ls   : same as /list but internal
+      /open : resolve a filePath to a fileHandle (location on a fileserver)
+      /mv   : move a src to destination
+      /rm   : remove a file
 **** FilePath to FileServer mapping
      The mapping of file-paths to file server is done through a 'shadow'
      filesystem. The Directory server makes use of the hosts filesystem in order
@@ -121,5 +132,7 @@
      table maps file paths to the status of the file (Locked/Unlocked). When a
      user wishes to access a file, the only way that they can find out what
      fileserver it resides on is for them to request to open the file from the
-     Transaction/Locking service. The Transaction/Locking service lookup the
-     status of the provided filepath, if its locked the client is served with
+     Transaction/Locking service (The transaction service then resolves the
+     filepath with the Directory service). The Transaction/Locking service looks up
+     the status of the provided filepath, if its locked the client is served
+     with
