@@ -1,0 +1,514 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2017-02-07 Tue 14:35 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title></title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="Marijan Gradecak" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { width: 90%; }
+  /*]]>*/-->
+</style>
+<link rel="stylesheet" type="text/css" href="http://www.pirilampo.org/styles/readtheorg/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="http://www.pirilampo.org/styles/readtheorg/css/readtheorg.css"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="http://www.pirilampo.org/styles/lib/js/jquery.stickytableheaders.js"></script>
+<script type="text/javascript" src="http://www.pirilampo.org/styles/readtheorg/js/readtheorg.js"></script>
+<style>pre.src {background-color: #222; color: #fff; font-family: "Fira Code"} pre {box-shadow: none;}</style>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orgd8aa655">1. Distributed FileSystem (DFS)</a></li>
+<li><a href="#org99bf35d">2. Authentication Service:</a>
+<ul>
+<li><a href="#orgb2d7502">2.1. Service Overview:</a></li>
+<li><a href="#orgc22277b">2.2. Message Encryption:</a></li>
+<li><a href="#orgcbef049">2.3. User Authentication:</a></li>
+<li><a href="#org54e7390">2.4. Internal Authentication</a></li>
+</ul>
+</li>
+<li><a href="#org93ec993">3. Directory Service:</a>
+<ul>
+<li><a href="#org66d65ca">3.1. Service Overview:</a></li>
+<li><a href="#org6b91cdf">3.2. API:</a></li>
+<li><a href="#org80edefd">3.3. FilePath to FileServer mapping</a></li>
+<li><a href="#org51ec2e3">3.4. Creating New Files</a></li>
+<li><a href="#org2a103ad">3.5. Deleting Files</a></li>
+</ul>
+</li>
+<li><a href="#orgb89b388">4. Transaction/Locking service</a>
+<ul>
+<li><a href="#orgc39be90">4.1. Service Overview</a></li>
+<li><a href="#org2cca34c">4.2. Locking</a></li>
+<li><a href="#org52a6199">4.3. Transactions</a></li>
+</ul>
+</li>
+<li><a href="#org99d610b">5. File Servers (FileSystem)</a>
+<ul>
+<li><a href="#orga106524">5.1. Service Overview</a></li>
+<li><a href="#org7e95e7f">5.2. File Storage/Retrieval</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgd8aa655" class="outline-2">
+<h2 id="orgd8aa655"><span class="section-number-2">1</span> Distributed FileSystem (DFS)</h2>
+</div>
+<div id="outline-container-org99bf35d" class="outline-2">
+<h2 id="org99bf35d"><span class="section-number-2">2</span> Authentication Service:</h2>
+<div class="outline-text-2" id="text-2">
+</div><div id="outline-container-orgb2d7502" class="outline-3">
+<h3 id="orgb2d7502"><span class="section-number-3">2.1</span> Service Overview:</h3>
+<div class="outline-text-3" id="text-2-1">
+<p>
+The Authentication service is the main authority in the DFS it handles
+client authentication, inter-service authentication and system state
+tracking (i.e. fileserver locations, directory server location etc..). All
+services on startup must report to the Authentication Service before they
+are officially integrated into the DFS
+</p>
+</div>
+</div>
+<div id="outline-container-orgc22277b" class="outline-3">
+<h3 id="orgc22277b"><span class="section-number-3">2.2</span> Message Encryption:</h3>
+<div class="outline-text-3" id="text-2-2">
+<p>
+The Distributed File System has no bespoke message encryption scheme.
+Instead, the services of the DFS are meant to be run behind a reverse proxy
+(Such as Apache, Nginx etc..). In a production system these reverse proxies
+would guarantee message encryption via TLS. This is standard practice in
+many REST applications as these web servers are made for this purpose and
+are more resilient to many types or errors and attacks.
+</p>
+</div>
+</div>
+<div id="outline-container-orgcbef049" class="outline-3">
+<h3 id="orgcbef049"><span class="section-number-3">2.3</span> User Authentication:</h3>
+<div class="outline-text-3" id="text-2-3">
+<p>
+The Authentication service stores a list of Usernames and Password Hashes
+in a key/value store Redis. A user wishing to use the DFS must first
+authenticate themselves with the DFS before they can gain access to the
+system. To authenticate themselves the user will send their username +
+password hash and the Authentication Service will perform a lookup in the
+key/value store for matching details. If authentication is successful, the
+user will be issued with a UUID (Universal Unique Identifier)[Token] and
+the IP addresses of the Directory and Transaction Services. The token will
+be set to expire after a number of minutes. As well as issuing the Token to
+the User, the Authentication service will also broadcast the token to all
+of the other services. The other services will place the token in their
+Redis instance, setting the expiry time to that specified by the Token
+(expiry is provided by Redis as expired tokens will be automatically
+deleted). A user wishing to access any other service from then on must
+present their token as a HTTP header (auth-cookie). Each service will then
+do a lookup on receiving a request in their Redis instance and only valid
+Token holders will be granted access.
+</p>
+</div>
+</div>
+<div id="outline-container-org54e7390" class="outline-3">
+<h3 id="org54e7390"><span class="section-number-3">2.4</span> Internal Authentication</h3>
+<div class="outline-text-3" id="text-2-4">
+<p>
+Different Services within the DFS must also be able to verify each others
+identities to ensure that no foreign or malicious service is attempting to
+access the system. As such, when a service (such as Directory or
+Transaction) is first started. They register themselves with the
+Authentication service. The Authentication service issues to them
+information about all of the other services currently in the system (if
+needed) and also provides them with an Internal Session token. Similar to
+the client authentication, internal services wishing to communicate to
+other services via an internally protected endpoint must include the
+internal token in their request header before their messages will be
+considered authentic.
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org93ec993" class="outline-2">
+<h2 id="org93ec993"><span class="section-number-2">3</span> Directory Service:</h2>
+<div class="outline-text-2" id="text-3">
+</div><div id="outline-container-org66d65ca" class="outline-3">
+<h3 id="org66d65ca"><span class="section-number-3">3.1</span> Service Overview:</h3>
+<div class="outline-text-3" id="text-3-1">
+<p>
+The Directory service is responsible for mapping human readable file-paths
+to fileservers and file ID's. As well as this, the directory service is
+charged with creation/deletion of files and allocating which fileservers the
+files are to be replicated on.
+</p>
+</div>
+</div>
+<div id="outline-container-org6b91cdf" class="outline-3">
+<h3 id="org6b91cdf"><span class="section-number-3">3.2</span> API:</h3>
+<div class="outline-text-3" id="text-3-2">
+<p>
+-Public Endpoints:
+</p>
+
+<p>
+<b>/list</b> : returns the contents of a directory
+</p>
+
+<p>
+-Internal Endpoints:
+<b>/ls</b>   : same as /list but internal
+<b>/open</b> : resolve a filePath to a fileHandle (location on a fileserver)
+<b>/mv</b>   : move a src to destination
+<b>/rm</b>   : remove a file
+*/registerfs :
+</p>
+</div>
+</div>
+<div id="outline-container-org80edefd" class="outline-3">
+<h3 id="org80edefd"><span class="section-number-3">3.3</span> FilePath to FileServer mapping</h3>
+<div class="outline-text-3" id="text-3-3">
+<p>
+The mapping of file-paths to file server is done through a 'shadow'
+filesystem. The Directory server makes use of the hosts filesystem in order
+to create a mapping between file-paths and the fileservers in which the
+file resides. When a new file is created the directory service selects the
+fileservers on which the file should be placed. This list of file locations
+(FileHandles) is then serialized and written to a file in the 'shadow'
+filesystem corresponding to the human readable file-path that the user
+provided.
+</p>
+
+<p>
+Similarly, when a user wishes to find out where a file is
+located, they provide a filepath which is looked up in the shadow
+file-system. The file that the path is pointing to is read in, giving us a
+list of FileHandles. the head of the list is returned, and is then moved to
+the end of the list, providing a sort of round-robin balancing of file
+access'. Recently accessed filepaths are cached in memory meaning that we
+can avoid expensive file access operations for frequently accessed files.
+</p>
+</div>
+</div>
+<div id="outline-container-org51ec2e3" class="outline-3">
+<h3 id="org51ec2e3"><span class="section-number-3">3.4</span> Creating New Files</h3>
+<div class="outline-text-3" id="text-3-4">
+<p>
+When creating a new file, the directory server first selects N file servers
+that the file should be duplicated on. Following this, file meta-data is
+generated (consisting of file-id, server location, version number etc) and
+disseminated to each of the selected fileservers. This is essentially
+'version 0' of the file. As well as generating file metadata the directory
+service also generates a list of FileHandles corresponding to which
+fileserver the file can be found on. The user who requested the new file is
+given a file handle which contains the IP and file-id of the requested
+file. Once they upload the file to the fileserver they were given, the file
+version is updated and the GOSSIP protocol ensures that all of the N chosen
+file servers get the new version.
+</p>
+</div>
+</div>
+<div id="outline-container-org2a103ad" class="outline-3">
+<h3 id="org2a103ad"><span class="section-number-3">3.5</span> Deleting Files</h3>
+<div class="outline-text-3" id="text-3-5">
+<p>
+Deleting files is simple, the user provides a filepath to the file they
+wish to remove. This file is located in the shadow file system and read in
+to memory, giving us a list of FileHandles (file meta-data). Each of the
+fileservers mentioned in the list of FileHandles is notified of the file
+deletion and instructed to delete their copy of the file. The directory
+service then simply removes the meta-data file from the shadow filesystem.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgb89b388" class="outline-2">
+<h2 id="orgb89b388"><span class="section-number-2">4</span> Transaction/Locking service</h2>
+<div class="outline-text-2" id="text-4">
+</div><div id="outline-container-orgc39be90" class="outline-3">
+<h3 id="orgc39be90"><span class="section-number-3">4.1</span> Service Overview</h3>
+<div class="outline-text-3" id="text-4-1">
+<p>
+The Transaction/Locking service is a Transaction service and a Locking
+service combined into one. It is responsible for locking/unlocking single
+files as well as providing transactions when more complicated operations
+such as directory moves are preformed.
+</p>
+</div>
+</div>
+<div id="outline-container-org2cca34c" class="outline-3">
+<h3 id="org2cca34c"><span class="section-number-3">4.2</span> Locking</h3>
+<div class="outline-text-3" id="text-4-2">
+<p>
+The locking service is implemented using a simple map. The the map maps file
+paths to the status of the file (Locked/Unlocked). When a user wishes to
+access a file, the only way that they can find out what fileserver it resides
+on is for them to request to open the file from the Transaction/Locking
+service (The transaction service then resolves the filepath with the
+Directory service). The Transaction/Locking service looks up the status of
+the provided filepath, if locked the client is served with HTTP 400 "Resource
+is locked". If unlocked(or not presenet in cache) the status of the filepath
+is set to locked and the filehandle is served to the user.
+</p>
+</div>
+</div>
+<div id="outline-container-org52a6199" class="outline-3">
+<h3 id="org52a6199"><span class="section-number-3">4.3</span> Transactions</h3>
+<div class="outline-text-3" id="text-4-3">
+<p>
+Transactions are used when a user attempts to execute an operation that will
+involve multiple files (such as a folder move). The Transaction service will
+utilize its locking capabilities and attempt to lock each of the files
+involved in the transaction. in the case of a transaction failure (failure to
+aquire a lock) the transaction service will keep attempting to secure the
+lock (spin lock method) until it succeeds. Once all of the resources are
+locked, the operation is carried out and the resources are unlocked.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org99d610b" class="outline-2">
+<h2 id="org99d610b"><span class="section-number-2">5</span> File Servers (FileSystem)</h2>
+<div class="outline-text-2" id="text-5">
+</div><div id="outline-container-orga106524" class="outline-3">
+<h3 id="orga106524"><span class="section-number-3">5.1</span> Service Overview</h3>
+<div class="outline-text-3" id="text-5-1">
+<p>
+The file server is the service responsible for the actual storing of the
+files in the distributed filesystem. The DFS infrastructure allows for any
+number of fileservers in the system (Minimum 1) meaning that the DFS will
+scale well if more storage is needed. File consistency is guaranteed by the
+file servers through the user of a gossip protocol.
+</p>
+</div>
+</div>
+<div id="outline-container-org7e95e7f" class="outline-3">
+<h3 id="org7e95e7f"><span class="section-number-3">5.2</span> File Storage/Retrieval</h3>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Marijan Gradecak</p>
+<p class="date">Created: 2017-02-07 Tue 14:35</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
