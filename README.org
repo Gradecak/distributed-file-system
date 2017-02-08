@@ -1,7 +1,7 @@
 ** Distributed File System
 
 * Documentation
-  see: https://gradecak.github.io/distributed-file-system/#orgc1836c0
+  see: https://gradecak.github.io/distributed-file-system/
   
 * Running the Project
   From the root of the project run
@@ -10,4 +10,13 @@
   ./build.sh
   docoker-compose up
   #+END_SRC
- 
+  
+  This will start the core DFS services, Authentication Service, Transaction Service and Directory Service.
+  
+  to add FileServers to the system you must individually spin up every fileserver instance by navigating to the project
+  directory and executing the following:
+  #+BEGIN_SRC bash
+  stack build
+  stack exec fileSystem-exe
+  #+END_SRC
+
