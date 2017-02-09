@@ -54,6 +54,7 @@ executable dirServer-exe
                      , Dir
                      , API
                      , Token
+                     , directory >= 1.2
                      , servant >= 0.9.1.1
                      , servant-client >= 0.9.1.1
                      , http-client >= 0.4

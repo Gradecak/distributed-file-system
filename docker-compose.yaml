@@ -25,6 +25,7 @@ services:
     environment:
       <<: *authport # inhert auth port
       DIRECTORY_PORT: 8081
+      SHADOW_PATH: "./shadowFS"
     depends_on:
       - auth-service
       - dir-redis
